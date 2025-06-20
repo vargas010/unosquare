@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axiosConfig';
+import { FaRegEdit, FaTrashAlt, FaEye } from 'react-icons/fa'; // Importamos los iconos
 
 const Accounts = () => {
   const [accounts, setAccounts] = useState([]);
@@ -52,9 +53,10 @@ const Accounts = () => {
               <td className="py-2 px-4">
                 <button
                   onClick={() => navigate(`/accounts/view/${account.id}`)}
-                  className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                  className="border-2 border-blue-600 text-blue-600 px-3 py-1 rounded hover:bg-blue-600 hover:text-white transition duration-200"
                 >
-                  Ver
+                  <FaEye />
+
                 </button>
               </td>
             </tr>
