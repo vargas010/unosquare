@@ -6,6 +6,8 @@ import AccountLeads from "./pages/AccountLeads";
 import AccountForm from "./pages/AccountForm"; 
 import LeadForm from "./pages/LeadForm"; 
 import AccountLeadsForm from "./pages/AccountLeadsForm";
+import AccountView from "./pages/AccountView";
+import LeadDetail from "./pages/LeadDetail"; 
 
 const Dashboard = () => (
   <>
@@ -19,6 +21,8 @@ function App() {
     <AdminLayout>
       <Routes>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/leads/view/:id" element={<LeadDetail />} />
+        <Route path="/accounts/view/:id" element={<AccountView />} />
         <Route path="/accounts" element={<Accounts />} />
         <Route path="/accounts/create" element={<AccountForm />} /> {/* NUEVO */}
         <Route path="/accounts/edit/:id" element={<AccountForm />} /> {/* NUEVO */}
@@ -28,6 +32,7 @@ function App() {
         <Route path="/leads/edit/:id" element={<LeadForm />} />
         <Route path="/account-leads/create" element={<AccountLeadsForm />} />
         <Route path="/account-leads/edit/:id" element={<AccountLeadsForm />} />
+
       </Routes>
     </AdminLayout>
   );

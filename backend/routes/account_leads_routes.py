@@ -6,11 +6,13 @@ account_leads_bp = Blueprint('account_leads', __name__)
 
 @account_leads_bp.route('/account-leads', methods=['GET'])
 def get_account_leads():
-    data = get_collection('account_leads')
-    if data:
-        return jsonify(data)
-    else:
-        return jsonify({'error': 'No se pudieron obtener los datos'}), 500
+    try:
+        response = requests.get("http://127.0.0.1:8090/api/collections/account_leads/records?expand=account_id,lead_id")
+        response.raise_for_status()
+        return jsonify(response.json())
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 @account_leads_bp.route('/account-leads', methods=['POST'])
 def create_account_lead():
@@ -64,5 +66,16 @@ def delete_account_lead(relation_id):
         response = requests.delete(url)
         response.raise_for_status()
         return jsonify({"message": "Relación eliminada correctamente"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@account_leads_bp.route('/account-leads/<string:relation_id>', methods=['PATCH'])
+def patch_account_lead(relation_id):
+    try:
+        data = request.get_json()
+        url = f"http://127.0.0.1:8090/api/collections/account_leads/records/{relation_id}"
+        response = requests.patch(url, json=data)
+        response.raise_for_status()
+        return jsonify(response.json())
     except Exception as e:
         return jsonify({"error": str(e)}), 500

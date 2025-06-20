@@ -76,6 +76,12 @@ const Leads = () => {
                 >
                   Eliminar
                 </button>
+                <button
+                  onClick={() => navigate(`/leads/view/${lead.id}`)}
+                  className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 mr-2"
+                >
+                  Ver
+                </button>
               </td>
             </tr>
           ))}

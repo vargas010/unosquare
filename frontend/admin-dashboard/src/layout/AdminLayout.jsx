@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom'; // ✅ Importar Link
+import { Link } from 'react-router-dom';
 
 const AdminLayout = ({ children }) => {
   return (
@@ -9,13 +9,13 @@ const AdminLayout = ({ children }) => {
         <h2 className="text-2xl font-bold mb-8">Unosquare Admin</h2>
         <nav className="space-y-4">
           <Link to="/" className="block hover:text-blue-300">Dashboard</Link>
-          <Link to="/accounts" className="block hover:text-blue-300">accounts</Link>
+          <Link to="/accounts" className="block hover:text-blue-300">Accounts</Link>
           <Link to="/leads" className="block hover:text-blue-300">Leads</Link>
-          <Link to="/account-leads" className="block hover:text-blue-300">account-leads</Link>
+          <Link to="/account-leads" className="block hover:text-blue-300">Account-Leads</Link>
         </nav>
       </aside>
 
-      {/* Contenido */}
+      {/* Contenido principal */}
       <main className="flex-1 bg-gray-100 p-8">
         {children}
       </main>
