@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axiosConfig';
+import { FaRegEdit, FaTrashAlt, FaEye } from 'react-icons/fa'; // Importamos los iconos
 
 const Leads = () => {
   const [leads, setLeads] = useState([]);
@@ -66,21 +67,21 @@ const Leads = () => {
               <td className="py-2 px-4 space-x-2">
                 <button
                   onClick={() => navigate(`/leads/edit/${lead.id}`)}
-                  className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                  className="border-2 border-yellow-500 text-yellow-500 px-3 py-1 rounded hover:bg-yellow-500 hover:text-white transition duration-200"
                 >
-                  Editar
+                  <FaRegEdit />
                 </button>
                 <button
                   onClick={() => handleDelete(lead.id)}
-                  className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                  className="border-2 border-red-500 text-red-500 px-3 py-1 rounded hover:bg-red-500 hover:text-white transition duration-200"
                 >
-                  Eliminar
+                  <FaTrashAlt />
                 </button>
                 <button
                   onClick={() => navigate(`/leads/view/${lead.id}`)}
-                  className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 mr-2"
+                  className="border-2 border-blue-600 text-blue-600 px-3 py-1 rounded hover:bg-blue-600 hover:text-white transition duration-200"
                 >
-                  Ver
+                  <FaEye />
                 </button>
               </td>
             </tr>
