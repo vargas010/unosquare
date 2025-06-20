@@ -12,7 +12,7 @@ import LeadDetail from "./pages/LeadDetail";
 const Dashboard = () => (
   <>
     <h1 className="text-3xl font-semibold text-gray-800">Dashboard</h1>
-    <p className="text-gray-600 mt-2">Resumen del administrador</p>
+    <p className="text-gray-600 mt-2">Bienvenido a admin</p>
   </>
 );
 

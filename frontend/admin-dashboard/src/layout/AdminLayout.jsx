@@ -11,7 +11,6 @@ const AdminLayout = ({ children }) => {
           <Link to="/" className="block hover:text-blue-300">Dashboard</Link>
           <Link to="/accounts" className="block hover:text-blue-300">Accounts</Link>
           <Link to="/leads" className="block hover:text-blue-300">Leads</Link>
-          <Link to="/account-leads" className="block hover:text-blue-300">Account-Leads</Link>
         </nav>
       </aside>
 
