@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axiosConfig';
 import { FaRegEdit, FaTrashAlt, FaEye } from 'react-icons/fa'; // Importamos los iconos
-
+import { FaPlus } from 'react-icons/fa';
+  
 const Leads = () => {
   const [leads, setLeads] = useState([]);
   const navigate = useNavigate();
@@ -39,9 +40,10 @@ const Leads = () => {
         <h1 className="text-2xl font-bold text-gray-800">Leads Registrados</h1>
         <button
           onClick={() => navigate('/leads/create')}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-        >
-          Crear Lead
+           className="border-2 border-green-600 text-green-600 px-4 py-2 rounded hover:bg-green-600 hover:text-white transition duration-200 flex items-center"
+          >
+          <FaPlus className="mr-2" /> {/* Icono con un pequeño margen a la derecha */}
+            New Lead
         </button>
       </div>
 
