@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axiosConfig';
 import { FaRegEdit, FaTrashAlt, FaEye } from 'react-icons/fa'; // Importamos los iconos
+import UtcClock from "../components/UtcClock";
+
 
 const Accounts = () => {
   const [accounts, setAccounts] = useState([]);
@@ -32,6 +34,9 @@ const Accounts = () => {
           Crear Cuenta
         </button>
       </div>
+
+      <UtcClock />
+
 
       <table className="min-w-full bg-white shadow rounded-lg overflow-hidden">
         <thead className="bg-blue-900 text-white">

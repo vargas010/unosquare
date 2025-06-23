@@ -15,6 +15,9 @@ const LeadForm = () => {
     work_email: ''
   });
 
+  const [accounts, setAccounts] = useState([]);
+  const [selectedAccount, setSelectedAccount] = useState('');
+
   useEffect(() => {
     if (isEdit) {
       api.get(`/leads/${id}`)
@@ -31,6 +34,11 @@ const LeadForm = () => {
         .catch(err => {
           console.error("Error al cargar los datos del lead:", err);
         });
+    } else {
+      // Solo cuando se crea
+      api.get('/accounts')
+        .then(res => setAccounts(res.data.items || []))
+        .catch(err => console.error("Error al cargar cuentas:", err));
     }
   }, [id, isEdit]);
 
@@ -38,17 +46,34 @@ const LeadForm = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    const request = isEdit ? api.put(`/leads/${id}`, form) : api.post('/leads', form);
 
-    request
-      .then(() => {
-        navigate('/leads');
-      })
-      .catch(err => {
-        console.error('Error al guardar el lead:', err);
-      });
+    try {
+      if (isEdit) {
+        await api.put(`/leads/${id}`, form);
+      } else {
+        // Crear el lead
+        const res = await api.post('/leads', form);
+        const leadId = res.data.id;
+
+        // Crear la relación con la cuenta
+        if (selectedAccount) {
+          const today = new Date().toISOString().split("T")[0];
+          await api.post('/account-leads', {
+            lead_id: leadId,
+            account_id: selectedAccount,
+            start_date: today,
+            end_date: null,
+            notes: ''
+          });
+        }
+      }
+
+      navigate('/leads');
+    } catch (err) {
+      console.error('Error al guardar el lead:', err);
+    }
   };
 
   return (
@@ -65,6 +90,26 @@ const LeadForm = () => {
           <input type="email" name="personal_email" value={form.personal_email} onChange={handleChange} placeholder="Correo personal" className="p-2 border rounded" />
           <input type="email" name="work_email" value={form.work_email} onChange={handleChange} placeholder="Correo laboral" className="p-2 border rounded" />
         </div>
+
+        {!isEdit && (
+          <div>
+            <label className="block mb-2 font-medium">Cuenta donde trabajará:</label>
+            <select
+              value={selectedAccount}
+              onChange={(e) => setSelectedAccount(e.target.value)}
+              required
+              className="w-full p-2 border rounded"
+            >
+              <option value="">Selecciona una cuenta</option>
+              {accounts.map(account => (
+                <option key={account.id} value={account.id}>
+                  {account.name} - {account.website}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div className="flex gap-4">
           <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
             {isEdit ? 'Actualizar' : 'Crear'}
