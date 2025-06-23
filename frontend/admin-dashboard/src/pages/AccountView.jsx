@@ -167,19 +167,35 @@ const AccountView = () => {
                 <th className="py-2 px-4 text-left">Correo</th>
                 <th className="py-2 px-4 text-left">Inicio</th>
                 <th className="py-2 px-4 text-left">Fin</th>
-                <th className="py-2 px-4 text-left">Notas</th>
+                <th className="py-2 px-4 text-left">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {previousLeads.map(rel => {
-                const lead = leads.find(l => l.id === rel.lead_id);
+                const lead = rel.expand?.lead_id;
+
+                const handleRestore = () => {
+                  if (window.confirm("¿Deseas restaurar este lead como activo en esta cuenta?")) {
+                    api.patch(`/account-leads/${rel.id}`, { end_date: null })
+                      .then(() => fetchRelations())
+                      .catch(err => console.error("Error al restaurar lead:", err));
+                  }
+                };
+
                 return (
                   <tr key={rel.id} className="border-b">
                     <td className="py-2 px-4">{lead ? `${lead.name} ${lead.last_name}` : '—'}</td>
                     <td className="py-2 px-4">{lead?.work_email || lead?.personal_email || '—'}</td>
                     <td className="py-2 px-4">{rel.start_date}</td>
                     <td className="py-2 px-4">{rel.end_date}</td>
-                    <td className="py-2 px-4">{rel.notes || '—'}</td>
+                    <td className="py-2 px-4">
+                      <button
+                        onClick={handleRestore}
+                        className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                      >
+                        Restaurar
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
@@ -189,6 +205,7 @@ const AccountView = () => {
           <p className="text-gray-600">No hay historial de leads anteriores.</p>
         )}
       </div>
+
 
       <div className="bg-white shadow rounded-lg p-6 mt-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Agregar Lead a esta Cuenta</h2>
