@@ -13,6 +13,42 @@ const AccountView = () => {
   const [previousLeads, setPreviousLeads] = useState([]);
   const [leads, setLeads] = useState([]);
   const [selectedLead, setSelectedLead] = useState("");
+
+  const [quickLead, setQuickLead] = useState({
+    name: '',
+    last_name: '',
+    work_email: ''
+  });
+
+  const handleQuickLeadChange = (e) => {
+    setQuickLead({ ...quickLead, [e.target.name]: e.target.value });
+  };
+
+  const handleQuickLeadCreate = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.post('/leads', quickLead);
+      const createdLead = res.data;
+
+      const nowUTC = new Date().toISOString();
+      await api.post('/account-leads', {
+        account_id: account.id,
+        lead_id: createdLead.id,
+        start_date: nowUTC,
+        end_date: null,
+        notes: ''
+      });
+
+      setShowModal(false);
+      setQuickLead({ name: '', last_name: '', work_email: '' });
+      fetchRelations();
+      api.get('/leads')
+        .then(res => setLeads(res.data.items || []))
+        .catch(err => console.error("Error al actualizar leads:", err));
+    } catch (err) {
+      console.error("Error al crear y asignar lead:", err);
+    }
+  };
   const [searchTerm, setSearchTerm] = useState('');
   const [showColumns, setShowColumns] = useState({
     name: true,
@@ -54,74 +90,16 @@ const AccountView = () => {
       .catch(err => console.error("Error al cargar relaciones:", err));
   };
 
-  const fetchLeads = () => {
-    api.get('/leads')
-      .then(res => setLeads(res.data.items || []))
-      .catch(err => console.error("Error al obtener leads:", err));
-  };
-
-  const handleSortCurrentLeads = () => {
-    setOrderByCurrentLeads(orderByCurrentLeads === 'asc' ? 'desc' : 'asc');
-  };
-
-  const handleSortPreviousLeads = () => {
-    setOrderByPreviousLeads(orderByPreviousLeads === 'asc' ? 'desc' : 'asc');
-  };
-
-  const nextPageCurrentLeads = () => {
-    if (currentPageCurrentLeads < Math.ceil(filteredCurrentLeads.length / rowsPerPage)) {
-      setCurrentPageCurrentLeads(currentPageCurrentLeads + 1);
+  const handleRemoveLead = (relationId) => {
+    if (window.confirm("¿Deseas marcar este lead como finalizado en esta cuenta?")) {
+      const today = new Date().toISOString().split("T")[0];
+      api.patch(`/account-leads/${relationId}`, {
+        end_date: today
+      })
+        .then(() => fetchRelations())
+        .catch(err => console.error("Error al finalizar la relación:", err));
     }
   };
-
-  const prevPageCurrentLeads = () => {
-    if (currentPageCurrentLeads > 1) {
-      setCurrentPageCurrentLeads(currentPageCurrentLeads - 1);
-    }
-  };
-
-  const nextPagePreviousLeads = () => {
-    if (currentPagePreviousLeads < Math.ceil(filteredPreviousLeads.length / rowsPerPage)) {
-      setCurrentPagePreviousLeads(currentPagePreviousLeads + 1);
-    }
-  };
-
-  const prevPagePreviousLeads = () => {
-    if (currentPagePreviousLeads > 1) {
-      setCurrentPagePreviousLeads(currentPagePreviousLeads - 1);
-    }
-  };
-
-  const toggleShowAllCurrentLeads = () => {
-    setShowAllRecordsCurrentLeads(!showAllRecordsCurrentLeads);
-    setCurrentPageCurrentLeads(1);
-  };
-
-  const toggleShowAllPreviousLeads = () => {
-    setShowAllRecordsPreviousLeads(!showAllRecordsPreviousLeads);
-    setCurrentPagePreviousLeads(1);
-  };
-
-  const filteredCurrentLeads = currentLeads.filter(rel =>
-    rel.lead_id && (leads.find(lead => lead.id === rel.lead_id)?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    leads.find(lead => lead.id === rel.lead_id)?.work_email.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  const filteredPreviousLeads = previousLeads.filter(rel =>
-    rel.lead_id && (leads.find(lead => lead.id === rel.lead_id)?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    leads.find(lead => lead.id === rel.lead_id)?.work_email.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  const sortedLeads = (leads, orderBy) => {
-    return leads.sort((a, b) => {
-      const dateA = new Date(a.start_date);
-      const dateB = new Date(b.start_date);
-      return orderBy === 'asc' ? dateA - dateB : dateB - dateA;
-    });
-  };
-
-  const displayedCurrentLeads = showAllRecordsCurrentLeads ? filteredCurrentLeads : sortedLeads(filteredCurrentLeads, orderByCurrentLeads).slice((currentPageCurrentLeads - 1) * rowsPerPage, currentPageCurrentLeads * rowsPerPage);
-  const displayedPreviousLeads = showAllRecordsPreviousLeads ? filteredPreviousLeads : sortedLeads(filteredPreviousLeads, orderByPreviousLeads).slice((currentPagePreviousLeads - 1) * rowsPerPage, currentPagePreviousLeads * rowsPerPage);
 
   if (!account) return <div className="p-6">Cargando detalles de la cuenta...</div>;
 
@@ -199,9 +177,9 @@ const AccountView = () => {
                 const lead = leads.find(l => l.id === rel.lead_id);
                 return (
                   <tr key={rel.id} className="border-b">
-                    {showColumns.name && <td className="py-2 px-4">{lead ? `${lead.name} ${lead.last_name}` : '—'}</td>}
-                    {showColumns.work_email && <td className="py-2 px-4">{lead?.work_email || lead?.personal_email || "—"}</td>}
-                    {showColumns.start_date && <td className="py-2 px-4">{rel.start_date}</td>}
+                    <td className="py-2 px-4">{lead ? `${lead.name} ${lead.last_name}` : '—'}</td>
+                    <td className="py-2 px-4">{lead?.work_email || lead?.personal_email || "—"}</td>
+                    <td className="py-2 px-4">{rel.start_date}</td>
                     <td className="py-2 px-4">
                       <button
                         onClick={() => handleRemoveLead(rel.id)}
@@ -291,10 +269,10 @@ const AccountView = () => {
                 const lead = leads.find(l => l.id === rel.lead_id);
                 return (
                   <tr key={rel.id} className="border-b">
-                    {showColumns.name && <td className="py-2 px-4">{lead ? `${lead.name} ${lead.last_name}` : '—'}</td>}
-                    {showColumns.work_email && <td className="py-2 px-4">{lead?.work_email || lead?.personal_email || '—'}</td>}
-                    {showColumns.start_date && <td className="py-2 px-4">{rel.start_date}</td>}
-                    {showColumns.end_date && <td className="py-2 px-4">{rel.end_date}</td>}
+                    <td className="py-2 px-4">{lead ? `${lead.name} ${lead.last_name}` : '—'}</td>
+                    <td className="py-2 px-4">{lead?.work_email || lead?.personal_email || '—'}</td>
+                    <td className="py-2 px-4">{rel.start_date}</td>
+                    <td className="py-2 px-4">{rel.end_date}</td>
                     <td className="py-2 px-4">
                       <button
                         onClick={() => handleRestoreLead(rel.id)}
@@ -313,6 +291,120 @@ const AccountView = () => {
         )}
       </div>
 
+
+      <div className="bg-white shadow rounded-lg p-6 mt-6">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">Agregar Lead a esta Cuenta</h2>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const today = new Date().toISOString().split("T")[0];
+
+            const payload = {
+              account_id: account.id,
+              lead_id: selectedLead,
+              start_date: today,
+              end_date: null,
+              notes: ""
+            };
+
+            api.post('/account-leads', payload)
+              .then(() => {
+                setSelectedLead('');
+                fetchRelations();
+              })
+              .catch(err => console.error("Error al agregar lead:", err));
+          }}
+          className="space-y-4"
+        >
+          <div className="grid grid-cols-2 gap-4">
+            <select
+              className="p-2 border rounded"
+              required
+              value={selectedLead}
+              onChange={(e) => setSelectedLead(e.target.value)}
+            >
+              <option value="">Selecciona un lead</option>
+              {leads.map(lead => {
+                const yaAsignado = currentLeads.some(rel => rel.lead_id === lead.id && !rel.end_date);
+                return (
+                  <option key={lead.id} value={lead.id} disabled={yaAsignado}>
+                    {lead.name} {lead.last_name} {yaAsignado ? "(Ya asignado)" : ""}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+          <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Asignar Lead
+          </button>
+        </form>
+      </div>
+
+      <div className="flex space-x-2">
+        <button
+          onClick={() => navigate(`/accounts/edit/${id}`)}
+          className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+        >
+          Editar Cuenta
+        </button>
+        <button
+          onClick={() => navigate('/accounts')}
+          className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+        >
+          Volver
+        </button>
+      </div>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+            <h2 className="text-xl font-bold mb-4">Crear Nuevo Lead</h2>
+            <form onSubmit={handleQuickLeadCreate} className="space-y-4">
+              <input
+                type="text"
+                name="name"
+                placeholder="Nombre"
+                value={quickLead.name}
+                onChange={handleQuickLeadChange}
+                className="w-full p-2 border rounded"
+                required
+              />
+              <input
+                type="text"
+                name="last_name"
+                placeholder="Apellido"
+                value={quickLead.last_name}
+                onChange={handleQuickLeadChange}
+                className="w-full p-2 border rounded"
+                required
+              />
+              <input
+                type="email"
+                name="work_email"
+                placeholder="Correo laboral"
+                value={quickLead.work_email}
+                onChange={handleQuickLeadChange}
+                className="w-full p-2 border rounded"
+              />
+              <div className="flex justify-end gap-4">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                  Crear
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
