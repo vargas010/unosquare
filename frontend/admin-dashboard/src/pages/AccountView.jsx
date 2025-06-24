@@ -30,11 +30,11 @@ const AccountView = () => {
       const res = await api.post('/leads', quickLead);
       const createdLead = res.data;
 
-      const today = new Date().toISOString().split("T")[0];
+      const nowUTC = new Date().toISOString();
       await api.post('/account-leads', {
         account_id: account.id,
         lead_id: createdLead.id,
-        start_date: today,
+        start_date: nowUTC,
         end_date: null,
         notes: ''
       });
@@ -76,7 +76,7 @@ const AccountView = () => {
 
   const handleRemoveLead = (relationId) => {
     if (window.confirm("¿Deseas marcar este lead como finalizado en esta cuenta?")) {
-      const today = new Date().toISOString().split("T")[0];
+      const nowUTC = new Date().toISOString();
       api.patch(`/account-leads/${relationId}`, {
         end_date: today
       })
@@ -119,7 +119,18 @@ const AccountView = () => {
                   <tr key={rel.id} className="border-b">
                     <td className="py-2 px-4">{lead ? `${lead.name} ${lead.last_name}` : '—'}</td>
                     <td className="py-2 px-4">{lead?.work_email || lead?.personal_email || "—"}</td>
-                    <td className="py-2 px-4">{rel.start_date}</td>
+                    <td className="py-2 px-4">
+                      {new Date(rel.start_date).toLocaleString('es-BO', {
+                        timeZone: 'UTC',
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false
+                      }) + ' UTC'}
+                    </td>
                     <td className="py-2 px-4">
                       <button
                         onClick={() => handleRemoveLead(rel.id)}
@@ -186,8 +197,34 @@ const AccountView = () => {
                   <tr key={rel.id} className="border-b">
                     <td className="py-2 px-4">{lead ? `${lead.name} ${lead.last_name}` : '—'}</td>
                     <td className="py-2 px-4">{lead?.work_email || lead?.personal_email || '—'}</td>
-                    <td className="py-2 px-4">{rel.start_date}</td>
-                    <td className="py-2 px-4">{rel.end_date}</td>
+                    <td className="py-2 px-4">
+                      {new Date(rel.start_date).toLocaleString('es-BO', {
+                        timeZone: 'UTC',
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false
+                      }) + ' UTC'}
+                    </td>
+
+                    <td className="py-2 px-4">
+                      {rel.end_date
+                        ? new Date(rel.end_date).toLocaleString('es-BO', {
+                            timeZone: 'UTC',
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: false
+                          }) + ' UTC'
+                        : '—'}
+                    </td>
+
                     <td className="py-2 px-4">
                       <button
                         onClick={handleRestore}
@@ -212,12 +249,12 @@ const AccountView = () => {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            const today = new Date().toISOString().split("T")[0];
+            const nowUTC = new Date().toISOString();
 
             const payload = {
               account_id: account.id,
               lead_id: selectedLead,
-              start_date: today,
+              start_date: nowUTC,
               end_date: null,
               notes: ""
             };
