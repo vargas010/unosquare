@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axiosConfig';
-import { FaRegEdit, FaTrashAlt, FaEye } from 'react-icons/fa'; // Importamos los iconos
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaEye, FaRegEdit, FaTrashAlt, FaChevronLeft, FaChevronRight, FaRedoAlt, FaUndoAlt, FaCaretDown, FaChevronUp, FaChevronDown } from 'react-icons/fa'; // Añadido FaChevronUp y FaChevronDown
 import UtcClock from "../components/UtcClock";
-import { FaCaretDown } from 'react-icons/fa'; // Agregar esta línea para importar FaCaretDown
 
 const Leads = () => {
   const [leads, setLeads] = useState([]);
@@ -18,6 +16,9 @@ const Leads = () => {
   }); // Estado para las columnas a mostrar
   const [showDropdown, setShowDropdown] = useState(false); // Para mostrar/ocultar el dropdown de columnas
   const [orderBy, setOrderBy] = useState('asc'); // Para controlar el orden (ascendente o descendente)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage] = useState(5); // Filas por página (solo 5 por página)
+  const [showAllRecords, setShowAllRecords] = useState(false); // Estado para controlar si se muestran todos los registros
   const navigate = useNavigate();
 
   const fetchLeads = () => {
@@ -61,6 +62,31 @@ const Leads = () => {
     setOrderBy(order); // 'asc' o 'desc'
   };
 
+  // Función para cambiar a la página siguiente
+  const nextPage = () => {
+    if (currentPage < Math.ceil(filteredLeads.length / rowsPerPage)) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // Función para cambiar a la página anterior
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  // Función para alternar entre mostrar todos los registros y mostrar 5 registros
+  const toggleShowAll = () => {
+    setShowAllRecords(!showAllRecords);
+    setCurrentPage(1); // Cuando cambiamos el estado, reiniciamos la página a la 1
+  };
+
+  // Calculando los registros para la página actual
+  const indexOfLastLead = currentPage * rowsPerPage;
+  const indexOfFirstLead = indexOfLastLead - rowsPerPage;
+  const currentLeads = showAllRecords ? filteredLeads : filteredLeads.slice(indexOfFirstLead, indexOfLastLead);
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -85,6 +111,40 @@ const Leads = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)} // Actualizamos el término de búsqueda
         />
+      </div>
+
+      {/* Contenedor azul para los botones */}
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleDateOrder(orderBy === 'asc' ? 'desc' : 'asc')}
+            className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+            title="Ordenar por más recientes/más antiguos"
+          >
+            {orderBy === 'asc' ? <FaRedoAlt /> : <FaUndoAlt />}
+          </button>
+          <button
+            onClick={prevPage}
+            className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+            title="Página anterior"
+          >
+            <FaChevronLeft />
+          </button>
+          <button
+            onClick={nextPage}
+            className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+            title="Página siguiente"
+          >
+            <FaChevronRight />
+          </button>
+          <button
+            onClick={toggleShowAll} // Cambia el estado de mostrar todos o mostrar 5 registros
+            className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+            title={showAllRecords ? "Mostrar 5 registros" : "Mostrar todos los datos"}
+          >
+            {showAllRecords ? <FaChevronDown /> : <FaChevronUp />}
+          </button>
+        </div>
       </div>
 
       {/* Botón de Selección de Columnas */}
@@ -163,19 +223,10 @@ const Leads = () => {
             {showColumns.personal_email && <th className="py-2 px-4 text-left cursor-pointer">Correo Personal</th>}
             {showColumns.work_email && <th className="py-2 px-4 text-left cursor-pointer">Correo Laboral</th>}
             <th className="py-2 px-4 text-left">Acciones</th>
-            <th className="py-2 px-4 text-left">
-              {/* Botón para ordenar por más recientes o más antiguos */}
-              <button
-                onClick={() => handleDateOrder(orderBy === 'asc' ? 'desc' : 'asc')}
-                className="border-2 border-blue-600 text-blue-600 px-4 py-2 rounded"
-              >
-                {orderBy === 'asc' ? 'Más antiguos' : 'Más recientes'}
-              </button>
-            </th>
           </tr>
         </thead>
         <tbody>
-          {filteredLeads.map((lead) => (
+          {currentLeads.map((lead) => (
             <tr key={lead.id} className="border-b">
               {showColumns.name && <td className="py-2 px-4">{lead.name}</td>}
               {showColumns.last_name && <td className="py-2 px-4">{lead.last_name}</td>}

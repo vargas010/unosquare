@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axiosConfig';
-import { FaPlus, FaEye, FaCaretDown } from 'react-icons/fa'; // Iconos necesarios
+import { FaPlus, FaEye, FaChevronLeft, FaChevronRight, FaRedoAlt, FaUndoAlt, FaCaretDown, FaChevronUp, FaChevronDown } from 'react-icons/fa'; // Iconos necesarios
 import UtcClock from "../components/UtcClock";
 
 const Accounts = () => {
@@ -17,6 +17,9 @@ const Accounts = () => {
   }); // Estado para las columnas a mostrar
   const [showDropdown, setShowDropdown] = useState(false); // Para mostrar/ocultar el dropdown de columnas
   const [orderBy, setOrderBy] = useState('asc'); // Para controlar el orden (ascendente o descendente)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage] = useState(5); // Filas por página
+  const [showAllRecords, setShowAllRecords] = useState(false); // Estado para mostrar todos los registros
   const navigate = useNavigate();
 
   const fetchAccounts = () => {
@@ -64,7 +67,33 @@ const Accounts = () => {
   );
 
   // Mostrar solo los primeros "n" registros
-  const displayedAccounts = filteredAccounts.slice(0, showOptions);
+  const displayedAccounts = showAllRecords
+    ? filteredAccounts // Mostrar todos los registros si showAllRecords es true
+    : filteredAccounts.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
+
+  const nextPage = () => {
+    if (currentPage < Math.ceil(filteredAccounts.length / rowsPerPage)) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const showAll = () => {
+    setShowAllRecords(true); // Muestra todos los registros
+    setCurrentPage(1); // Reinicia la página a la 1
+  };
+
+  const showSome = () => {
+    setShowAllRecords(false); // Muestra solo 5 registros
+    setCurrentPage(1); // Reinicia la página a la 1
+  };
+
+  if (!accounts) return <div className="p-6">Cargando cuentas...</div>;
 
   return (
     <div>
@@ -75,13 +104,13 @@ const Accounts = () => {
           className="border-2 border-green-600 text-green-600 px-4 py-2 rounded hover:bg-green-600 hover:text-white transition duration-200 flex items-center"
         >
           <FaPlus className="mr-2" />
-          New Account
+          Nueva Cuenta
         </button>
       </div>
 
       <UtcClock />
 
-      {/* Campo de búsqueda con un diseño más pequeño */}
+      {/* Campo de búsqueda */}
       <div className="mb-4 w-full max-w-xs">
         <input
           type="text"
@@ -149,6 +178,40 @@ const Accounts = () => {
         </div>
       )}
 
+      {/* Contenedor azul para los botones */}
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleDateOrder(orderBy === 'asc' ? 'desc' : 'asc')}
+            className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+            title="Ordenar por más recientes/más antiguos"
+          >
+            {orderBy === 'asc' ? <FaRedoAlt /> : <FaUndoAlt />}
+          </button>
+          <button
+            onClick={prevPage}
+            className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+            title="Página anterior"
+          >
+            <FaChevronLeft />
+          </button>
+          <button
+            onClick={nextPage}
+            className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+            title="Página siguiente"
+          >
+            <FaChevronRight />
+          </button>
+          <button
+            onClick={showAllRecords ? showSome : showAll} // Alterna entre mostrar todos los datos o solo 5 registros
+            className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+            title={showAllRecords ? "Mostrar 5 registros" : "Mostrar todos los datos"}
+          >
+            {showAllRecords ? <FaChevronDown /> : <FaChevronUp />}
+          </button>
+        </div>
+      </div>
+
       <table className="min-w-full bg-white shadow rounded-lg overflow-hidden">
         <thead className="bg-blue-900 text-white">
           <tr>
@@ -157,15 +220,6 @@ const Accounts = () => {
             {showColumns.website && <th className="py-2 px-4 text-left cursor-pointer" onClick={() => handleSort('website')}>Sitio Web</th>}
             {showColumns.phone && <th className="py-2 px-4 text-left cursor-pointer" onClick={() => handleSort('phone')}>Teléfono</th>}
             <th className="py-2 px-4 text-left">Acciones</th>
-            <th className="py-2 px-4 text-left">
-              {/* Botón para ordenar por más recientes o más antiguos */}
-              <button
-                onClick={() => handleDateOrder(orderBy === 'asc' ? 'desc' : 'asc')}
-                className="border-2 border-blue-600 text-blue-600 px-4 py-2 rounded"
-              >
-                {orderBy === 'asc' ? 'Más antiguos' : 'Más recientes'}
-              </button>
-            </th>
           </tr>
         </thead>
         <tbody>
