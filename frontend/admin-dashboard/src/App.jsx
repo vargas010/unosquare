@@ -1,12 +1,12 @@
 import { Routes, Route } from "react-router-dom";
 import AdminLayout from "./layout/AdminLayout";
-import Accounts from './pages/Accounts';
+import Accounts from './pages/account/Accounts';
 import Leads from './pages/Leads';
 import AccountLeads from "./pages/AccountLeads";
-import AccountForm from "./pages/AccountForm"; 
+import AccountForm from "./pages/account/AccountForm"; 
 import LeadForm from "./pages/LeadForm"; 
 import AccountLeadsForm from "./pages/AccountLeadsForm";
-import AccountView from "./pages/AccountView";
+import AccountView from "./pages/account/AccountView";
 import LeadDetail from "./pages/LeadDetail"; 
 
 const Dashboard = () => (

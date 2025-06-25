@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import api from '../api/axiosConfig';
+import api from '../../api/axiosConfig';
 
 const AccountForm = () => {
   const { id } = useParams();

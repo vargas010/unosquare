@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   FaTrashAlt,
   FaChevronLeft,
@@ -24,6 +24,11 @@ const CurrentLeadsTable = ({
   handleRemoveLead,
   setShowModal,
 }) => {
+  // Función para manejar la ordenación por más recientes/más antiguos
+  const handleSort = () => {
+    handleSortCurrentLeads(orderByCurrentLeads === "asc" ? "desc" : "asc");
+  };
+
   return (
     <div className="bg-white shadow rounded-lg p-6">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">
@@ -43,7 +48,7 @@ const CurrentLeadsTable = ({
       <div className="flex justify-between items-center mb-4">
         <div className="flex gap-2">
           <button
-            onClick={handleSortCurrentLeads}
+            onClick={handleSort} // Modificado para llamar handleSort
             className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
             title="Ordenar por más recientes/más antiguos"
           >

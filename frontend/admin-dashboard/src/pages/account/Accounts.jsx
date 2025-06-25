@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api/axiosConfig';
+import api from '../../api/axiosConfig';
 import { FaPlus, FaEye, FaChevronLeft, FaChevronRight, FaRedoAlt, FaUndoAlt, FaCaretDown, FaChevronUp, FaChevronDown } from 'react-icons/fa'; // Iconos necesarios
-import UtcClock from "../components/UtcClock";
+import UtcClock from "../../components/UtcClock";
 
 const Accounts = () => {
   const [accounts, setAccounts] = useState([]);

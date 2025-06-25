@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import api from "../api/axiosConfig";
+import api from "../../api/axiosConfig";
 
 // Componentes modularizados
-import AccountDetails from "../components/account/AccountDetails";
-import CurrentLeadsTable from "../components/account/CurrentLeadsTable";
-import PreviousLeadsTable from "../components/account/PreviousLeadsTable";
-import AddLeadForm from "../components/account/AddLeadForm";
-import CreateQuickLeadModal from "../components/account/CreateQuickLeadModal";
+import AccountDetails from "./AccountDetails";
+import CurrentLeadsTable from "./CurrentLeadsTable";
+import PreviousLeadsTable from "./PreviousLeadsTable";
+import AddLeadForm from "./AddLeadForm";
+import CreateQuickLeadModal from "./CreateQuickLeadModal";
 
 const AccountView = () => {
   const { id } = useParams();
