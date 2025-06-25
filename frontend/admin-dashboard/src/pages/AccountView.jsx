@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/axiosConfig";
-import { FaRegEdit, FaTrashAlt, FaEye, FaPlus } from 'react-icons/fa'; // Importamos los iconos
-import { FaChevronLeft, FaChevronRight, FaRedoAlt, FaUndoAlt, FaChevronUp, FaChevronDown } from 'react-icons/fa';
+import { FaTrashAlt, FaChevronLeft, FaChevronRight, FaRedoAlt, FaUndoAlt, FaChevronUp, FaChevronDown } from 'react-icons/fa';
 
 const AccountView = () => {
   const { id } = useParams();
@@ -49,6 +48,7 @@ const AccountView = () => {
       console.error("Error al crear y asignar lead:", err);
     }
   };
+
   const [searchTerm, setSearchTerm] = useState('');
   const [showColumns, setShowColumns] = useState({
     name: true,
@@ -56,9 +56,7 @@ const AccountView = () => {
     start_date: true,
     end_date: true,
   });
-  const [showDropdown, setShowDropdown] = useState(false);
-  
-  // Estados para paginación y ordenación
+
   const [orderByCurrentLeads, setOrderByCurrentLeads] = useState('asc');
   const [orderByPreviousLeads, setOrderByPreviousLeads] = useState('asc');
   
@@ -90,6 +88,60 @@ const AccountView = () => {
       .catch(err => console.error("Error al cargar relaciones:", err));
   };
 
+  const fetchLeads = () => {
+    api.get('/leads')
+      .then(res => {
+        setLeads(res.data.items || []);
+      })
+      .catch(err => console.error("Error al cargar leads:", err));
+  };
+
+  const handleSortCurrentLeads = () => {
+    const newOrder = orderByCurrentLeads === 'asc' ? 'desc' : 'asc';
+    setOrderByCurrentLeads(newOrder);
+
+    const sortedLeads = [...currentLeads].sort((a, b) => {
+      const nameA = a.name.toUpperCase(); 
+      const nameB = b.name.toUpperCase(); 
+
+      if (newOrder === 'asc') {
+        return nameA > nameB ? 1 : nameA < nameB ? -1 : 0;
+      } else {
+        return nameA < nameB ? 1 : nameA > nameB ? -1 : 0;
+      }
+    });
+
+    setCurrentLeads(sortedLeads);
+  };
+
+  // Funciones de paginación para los leads actuales
+  const prevPageCurrentLeads = () => {
+    if (currentPageCurrentLeads > 1) {
+      setCurrentPageCurrentLeads(currentPageCurrentLeads - 1);
+    }
+  };
+
+  const nextPageCurrentLeads = () => {
+    const totalPages = Math.ceil(currentLeads.length / rowsPerPage);
+    if (currentPageCurrentLeads < totalPages) {
+      setCurrentPageCurrentLeads(currentPageCurrentLeads + 1);
+    }
+  };
+
+  // Funciones de paginación para los leads anteriores
+  const prevPagePreviousLeads = () => {
+    if (currentPagePreviousLeads > 1) {
+      setCurrentPagePreviousLeads(currentPagePreviousLeads - 1);
+    }
+  };
+
+  const nextPagePreviousLeads = () => {
+    const totalPages = Math.ceil(previousLeads.length / rowsPerPage);
+    if (currentPagePreviousLeads < totalPages) {
+      setCurrentPagePreviousLeads(currentPagePreviousLeads + 1);
+    }
+  };
+
   const handleRemoveLead = (relationId) => {
     if (window.confirm("¿Deseas marcar este lead como finalizado en esta cuenta?")) {
       const today = new Date().toISOString().split("T")[0];
@@ -98,6 +150,36 @@ const AccountView = () => {
       })
         .then(() => fetchRelations())
         .catch(err => console.error("Error al finalizar la relación:", err));
+    }
+  };
+
+  const toggleShowAllCurrentLeads = () => {
+    setShowAllRecordsCurrentLeads(!showAllRecordsCurrentLeads);
+  };
+
+  const toggleShowAllPreviousLeads = () => {
+    setShowAllRecordsPreviousLeads(!showAllRecordsPreviousLeads);
+  };
+
+  // Función para restaurar un lead
+  const handleRestoreLead = (relationId) => {
+    const leadToRestore = previousLeads.find(rel => rel.id === relationId);
+    if (leadToRestore) {
+      const today = new Date().toISOString().split("T")[0];
+      api.patch(`/account-leads/${relationId}`, { 
+        end_date: null // Eliminar la fecha de fin
+      })
+        .then(() => {
+          api.post('/account-leads', {
+            account_id: account.id,
+            lead_id: leadToRestore.lead_id,
+            start_date: today,
+            end_date: null,
+            notes: ''
+          });
+          fetchRelations(); // Recargar las relaciones
+        })
+        .catch(err => console.error("Error al restaurar el lead:", err));
     }
   };
 
@@ -162,22 +244,22 @@ const AccountView = () => {
           </div>
         </div>
 
-        {displayedCurrentLeads.length > 0 ? (
+        {currentLeads.length > 0 ? (
           <table className="min-w-full table-auto">
             <thead className="bg-blue-900 text-white">
               <tr>
-                {showColumns.name && <th className="py-2 px-4 text-left">Nombre</th>}
-                {showColumns.work_email && <th className="py-2 px-4 text-left">Correo</th>}
-                {showColumns.start_date && <th className="py-2 px-4 text-left">Inicio</th>}
+                <th className="py-2 px-4 text-left">Nombre</th>
+                <th className="py-2 px-4 text-left">Correo</th>
+                <th className="py-2 px-4 text-left">Inicio</th>
                 <th className="py-2 px-4 text-left">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {displayedCurrentLeads.map(rel => {
-                const lead = leads.find(l => l.id === rel.lead_id);
+              {currentLeads.map((rel) => {
+                const lead = leads.find((l) => l.id === rel.lead_id);
                 return (
                   <tr key={rel.id} className="border-b">
-                    <td className="py-2 px-4">{lead ? `${lead.name} ${lead.last_name}` : '—'}</td>
+                    <td className="py-2 px-4">{lead ? `${lead.name} ${lead.last_name}` : "—"}</td>
                     <td className="py-2 px-4">{lead?.work_email || lead?.personal_email || "—"}</td>
                     <td className="py-2 px-4">{rel.start_date}</td>
                     <td className="py-2 px-4">
@@ -223,7 +305,7 @@ const AccountView = () => {
         <div className="flex justify-between items-center mb-4">
           <div className="flex gap-2">
             <button
-              onClick={handleSortPreviousLeads}
+              onClick={() => setOrderByPreviousLeads(orderByPreviousLeads === 'asc' ? 'desc' : 'asc')}
               className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
               title="Ordenar por más recientes/más antiguos"
             >
@@ -253,30 +335,30 @@ const AccountView = () => {
           </div>
         </div>
 
-        {displayedPreviousLeads.length > 0 ? (
+        {previousLeads.length > 0 ? (
           <table className="min-w-full table-auto">
             <thead className="bg-blue-900 text-white">
               <tr>
-                {showColumns.name && <th className="py-2 px-4 text-left">Nombre</th>}
-                {showColumns.work_email && <th className="py-2 px-4 text-left">Correo</th>}
-                {showColumns.start_date && <th className="py-2 px-4 text-left">Inicio</th>}
-                {showColumns.end_date && <th className="py-2 px-4 text-left">Fin</th>}
+                <th className="py-2 px-4 text-left">Nombre</th>
+                <th className="py-2 px-4 text-left">Correo</th>
+                <th className="py-2 px-4 text-left">Inicio</th>
+                <th className="py-2 px-4 text-left">Fin</th>
                 <th className="py-2 px-4 text-left">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {displayedPreviousLeads.map(rel => {
-                const lead = leads.find(l => l.id === rel.lead_id);
+              {previousLeads.map((rel) => {
+                const lead = leads.find((l) => l.id === rel.lead_id);
                 return (
                   <tr key={rel.id} className="border-b">
-                    <td className="py-2 px-4">{lead ? `${lead.name} ${lead.last_name}` : '—'}</td>
-                    <td className="py-2 px-4">{lead?.work_email || lead?.personal_email || '—'}</td>
+                    <td className="py-2 px-4">{lead ? `${lead.name} ${lead.last_name}` : "—"}</td>
+                    <td className="py-2 px-4">{lead?.work_email || lead?.personal_email || "—"}</td>
                     <td className="py-2 px-4">{rel.start_date}</td>
                     <td className="py-2 px-4">{rel.end_date}</td>
                     <td className="py-2 px-4">
                       <button
                         onClick={() => handleRestoreLead(rel.id)}
-                        className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                        className="border-2 border-green-500 text-green-500 px-3 py-1 rounded hover:bg-green-500 hover:text-white transition duration-200"
                       >
                         Restaurar
                       </button>
@@ -291,7 +373,7 @@ const AccountView = () => {
         )}
       </div>
 
-
+      {/* Sección de agregar lead a la cuenta */}
       <div className="bg-white shadow rounded-lg p-6 mt-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Agregar Lead a esta Cuenta</h2>
         <form
@@ -340,6 +422,7 @@ const AccountView = () => {
         </form>
       </div>
 
+      {/* Botones para editar o volver */}
       <div className="flex space-x-2">
         <button
           onClick={() => navigate(`/accounts/edit/${id}`)}
@@ -354,57 +437,6 @@ const AccountView = () => {
           Volver
         </button>
       </div>
-
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-            <h2 className="text-xl font-bold mb-4">Crear Nuevo Lead</h2>
-            <form onSubmit={handleQuickLeadCreate} className="space-y-4">
-              <input
-                type="text"
-                name="name"
-                placeholder="Nombre"
-                value={quickLead.name}
-                onChange={handleQuickLeadChange}
-                className="w-full p-2 border rounded"
-                required
-              />
-              <input
-                type="text"
-                name="last_name"
-                placeholder="Apellido"
-                value={quickLead.last_name}
-                onChange={handleQuickLeadChange}
-                className="w-full p-2 border rounded"
-                required
-              />
-              <input
-                type="email"
-                name="work_email"
-                placeholder="Correo laboral"
-                value={quickLead.work_email}
-                onChange={handleQuickLeadChange}
-                className="w-full p-2 border rounded"
-              />
-              <div className="flex justify-end gap-4">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                >
-                  Crear
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
