@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/axiosConfig";
-import { FaChevronUp, FaChevronDown, FaUndoAlt, FaRedoAlt } from 'react-icons/fa';
+import { FaChevronUp, FaChevronDown, FaUndoAlt, FaRedoAlt, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 const LeadsDetails = () => {
   const { id } = useParams();
@@ -10,7 +10,8 @@ const LeadsDetails = () => {
   const [relations, setRelations] = useState([]);
   const [currentRelations, setCurrentRelations] = useState([]);
   const [pastRelations, setPastRelations] = useState([]);
-  const [searchTerm, setSearchTerm] = useState(''); // Estado para el término de búsqueda
+  const [searchTermCurrent, setSearchTermCurrent] = useState(''); // Estado para el término de búsqueda de cuentas actuales
+  const [searchTermPast, setSearchTermPast] = useState(''); // Estado para el término de búsqueda del historial de cuentas
   const [showColumns, setShowColumns] = useState({
     account_name: true,
     website: true,
@@ -19,9 +20,16 @@ const LeadsDetails = () => {
     notes: true,
   }); // Estado para las columnas a mostrar
   const [showDropdown, setShowDropdown] = useState(false); // Para mostrar/ocultar el dropdown de columnas
+
+  // Estados independientes para paginación y orden en cada tabla
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage] = useState(5); // Filas por página
   const [orderBy, setOrderBy] = useState('desc'); // Orden de las cuentas
+  const [showAllRecords, setShowAllRecords] = useState(false); // Estado para mostrar todos los registros
+
+  const [historyPage, setHistoryPage] = useState(1); // Página del historial
+  const [historyOrderBy, setHistoryOrderBy] = useState('desc'); // Orden del historial
+  const [showHistoryAllRecords, setShowHistoryAllRecords] = useState(false); // Mostrar todos los registros del historial
 
   useEffect(() => {
     api.get(`/leads/${id}`)
@@ -44,26 +52,26 @@ const LeadsDetails = () => {
 
   // Filtrado de cuentas actuales
   const filteredCurrentRelations = currentRelations.filter(rel =>
-    rel.expand?.account_id?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    rel.expand?.account_id?.website.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    rel.notes.toLowerCase().includes(searchTerm.toLowerCase())
+    rel.expand?.account_id?.name.toLowerCase().includes(searchTermCurrent.toLowerCase()) ||
+    rel.expand?.account_id?.website.toLowerCase().includes(searchTermCurrent.toLowerCase()) ||
+    rel.notes.toLowerCase().includes(searchTermCurrent.toLowerCase())
   );
 
   // Filtrado de historial de cuentas
   const filteredPastRelations = pastRelations.filter(rel =>
-    rel.expand?.account_id?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    rel.expand?.account_id?.website.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    rel.notes.toLowerCase().includes(searchTerm.toLowerCase())
+    rel.expand?.account_id?.name.toLowerCase().includes(searchTermPast.toLowerCase()) ||
+    rel.expand?.account_id?.website.toLowerCase().includes(searchTermPast.toLowerCase()) ||
+    rel.notes.toLowerCase().includes(searchTermPast.toLowerCase())
   );
 
-  // Paginación de datos
-  const paginateData = (data) => {
-    const startIndex = (currentPage - 1) * rowsPerPage;
+  // Paginación de datos (Cuentas Actuales)
+  const paginateData = (data, page) => {
+    const startIndex = (page - 1) * rowsPerPage;
     const endIndex = startIndex + rowsPerPage;
     return data.slice(startIndex, endIndex);
   };
 
-  // Manejo del cambio de página
+  // Manejo del cambio de página para las cuentas actuales
   const nextPage = () => {
     if (currentPage < Math.ceil(filteredCurrentRelations.length / rowsPerPage)) {
       setCurrentPage(currentPage + 1);
@@ -77,11 +85,16 @@ const LeadsDetails = () => {
   };
 
   const showAll = () => {
-    setCurrentPage(1);
-    setRowsPerPage(filteredCurrentRelations.length);
+    setShowAllRecords(true); // Muestra todos los registros
+    setCurrentPage(1); // Reinicia la página a la 1
   };
 
-  // Ordenar por más recientes o más antiguos
+  const showSome = () => {
+    setShowAllRecords(false); // Muestra solo 5 registros
+    setCurrentPage(1); // Reinicia la página a la 1
+  };
+
+  // Ordenar por más recientes o más antiguos (Cuentas Actuales)
   const handleDateOrder = () => {
     const newOrder = orderBy === 'asc' ? 'desc' : 'asc';
     setOrderBy(newOrder);
@@ -91,6 +104,48 @@ const LeadsDetails = () => {
       return newOrder === 'asc' ? dateA - dateB : dateB - dateA;
     });
     setCurrentRelations(sortedData);
+  };
+
+  // Paginación de datos (Historial de Cuentas)
+  const paginateHistoryData = (data, page) => {
+    const startIndex = (page - 1) * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+    return data.slice(startIndex, endIndex);
+  };
+
+  // Manejo del cambio de página para el historial
+  const nextHistoryPage = () => {
+    if (historyPage < Math.ceil(filteredPastRelations.length / rowsPerPage)) {
+      setHistoryPage(historyPage + 1);
+    }
+  };
+
+  const prevHistoryPage = () => {
+    if (historyPage > 1) {
+      setHistoryPage(historyPage - 1);
+    }
+  };
+
+  const showHistoryAll = () => {
+    setShowHistoryAllRecords(true); // Muestra todos los registros del historial
+    setHistoryPage(1); // Reinicia la página a la 1
+  };
+
+  const showHistorySome = () => {
+    setShowHistoryAllRecords(false); // Muestra solo 5 registros del historial
+    setHistoryPage(1); // Reinicia la página a la 1
+  };
+
+  // Ordenar por más recientes o más antiguos (Historial de Cuentas)
+  const handleHistoryDateOrder = () => {
+    const newOrder = historyOrderBy === 'asc' ? 'desc' : 'asc';
+    setHistoryOrderBy(newOrder);
+    const sortedData = [...filteredPastRelations].sort((a, b) => {
+      const dateA = new Date(a.start_date);
+      const dateB = new Date(b.start_date);
+      return newOrder === 'asc' ? dateA - dateB : dateB - dateA;
+    });
+    setPastRelations(sortedData);
   };
 
   if (!lead) return <div className="p-6">Cargando detalles del lead...</div>;
@@ -125,83 +180,51 @@ const LeadsDetails = () => {
 
       <div>
         <h2 className="text-xl font-semibold text-gray-800 mb-2">Cuentas Actuales</h2>
-        
+
         {/* Campo de búsqueda para Cuentas Actuales */}
         <div className="mb-4">
           <input
             type="text"
             placeholder="Buscar Cuenta..."
             className="border-2 border-gray-300 px-3 py-2 rounded w-full focus:outline-none focus:border-blue-500 transition duration-200"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)} // Actualizamos el término de búsqueda
+            value={searchTermCurrent}
+            onChange={(e) => setSearchTermCurrent(e.target.value)} // Actualizamos el término de búsqueda
           />
         </div>
 
-        {/* Botón de Selección de Columnas */}
-        <button
-          onClick={() => setShowDropdown(!showDropdown)} // Toggle para mostrar el dropdown
-          className="border-2 border-blue-600 text-blue-600 px-3 py-1 rounded flex items-center mb-4"
-        >
-          Seleccionar Columnas
-        </button>
-
-        {/* Dropdown para selección de columnas */}
-        {showDropdown && (
-          <div className="p-4 border-2 border-blue-600 rounded w-48 bg-white shadow-lg">
-            <div className="mb-3">
-              <label className="block font-semibold text-gray-700 mb-1">
-                <input
-                  type="checkbox"
-                  value="account_name"
-                  checked={showColumns.account_name}
-                  onChange={(e) => setShowColumns({ ...showColumns, account_name: e.target.checked })}
-                  className="mr-2"
-                />
-                Nombre de la Cuenta
-              </label>
-              <label className="block font-semibold text-gray-700 mb-1">
-                <input
-                  type="checkbox"
-                  value="website"
-                  checked={showColumns.website}
-                  onChange={(e) => setShowColumns({ ...showColumns, website: e.target.checked })}
-                  className="mr-2"
-                />
-                Sitio Web
-              </label>
-              <label className="block font-semibold text-gray-700 mb-1">
-                <input
-                  type="checkbox"
-                  value="start_date"
-                  checked={showColumns.start_date}
-                  onChange={(e) => setShowColumns({ ...showColumns, start_date: e.target.checked })}
-                  className="mr-2"
-                />
-                Fecha Inicio
-              </label>
-              <label className="block font-semibold text-gray-700 mb-1">
-                <input
-                  type="checkbox"
-                  value="end_date"
-                  checked={showColumns.end_date}
-                  onChange={(e) => setShowColumns({ ...showColumns, end_date: e.target.checked })}
-                  className="mr-2"
-                />
-                Fecha Fin
-              </label>
-              <label className="block font-semibold text-gray-700 mb-1">
-                <input
-                  type="checkbox"
-                  value="notes"
-                  checked={showColumns.notes}
-                  onChange={(e) => setShowColumns({ ...showColumns, notes: e.target.checked })}
-                  className="mr-2"
-                />
-                Notas
-              </label>
-            </div>
+        {/* Contenedor de botones de paginación para Cuentas Actuales */}
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex gap-2">
+            <button
+              onClick={handleDateOrder}
+              className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+              title="Ordenar por más recientes/más antiguos"
+            >
+              {orderBy === 'asc' ? <FaRedoAlt /> : <FaUndoAlt />}
+            </button>
+            <button
+              onClick={prevPage}
+              className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+              title="Página anterior"
+            >
+              <FaChevronLeft />
+            </button>
+            <button
+              onClick={nextPage}
+              className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+              title="Página siguiente"
+            >
+              <FaChevronRight />
+            </button>
+            <button
+              onClick={showAllRecords ? showSome : showAll} // Alterna entre mostrar todos los datos o solo 5 registros
+              className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+              title={showAllRecords ? "Mostrar 5 registros" : "Mostrar todos los datos"}
+            >
+              {showAllRecords ? <FaChevronDown /> : <FaChevronUp />}
+            </button>
           </div>
-        )}
+        </div>
 
         {/* Tabla de Cuentas Actuales */}
         <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
@@ -213,40 +236,6 @@ const LeadsDetails = () => {
                 {showColumns.start_date && <th className="py-3 px-4 text-left">Fecha Inicio</th>}
                 {showColumns.end_date && <th className="py-3 px-4 text-left">Fecha Fin</th>}
                 {showColumns.notes && <th className="py-3 px-4 text-left">Notas</th>}
-                {/* Botones de navegación dentro de la tabla */}
-                <th className="py-3 px-4 text-left">
-                  <div className="flex gap-1">
-                    <button
-                      onClick={prevPage}
-                      className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                      title="Página Anterior"
-                    >
-                      <FaChevronUp />
-                    </button>
-                    <button
-                      onClick={nextPage}
-                      className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                      title="Página Siguiente"
-                    >
-                      <FaChevronDown />
-                    </button>
-                    <button
-                      onClick={showAll}
-                      className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                      title="Mostrar Todos los Datos"
-                    >
-                      <FaChevronUp />
-                      <FaChevronDown />
-                    </button>
-                    <button
-                      onClick={handleDateOrder}
-                      className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                      title="Ordenar por Más Recientes/Más Antiguos"
-                    >
-                      {orderBy === 'asc' ? <FaRedoAlt /> : <FaUndoAlt />}
-                    </button>
-                  </div>
-                </th>
               </tr>
             </thead>
             <tbody>
@@ -257,7 +246,7 @@ const LeadsDetails = () => {
                   </td>
                 </tr>
               ) : (
-                paginateData(filteredCurrentRelations).map(rel => (
+                paginateData(filteredCurrentRelations, currentPage).map(rel => (
                   <tr key={rel.id} className="border-b">
                     {showColumns.account_name && <td className="py-2 px-4">{rel.expand?.account_id?.name || '—'}</td>}
                     {showColumns.website && <td className="py-2 px-4">{rel.expand?.account_id?.website || '—'}</td>}
@@ -271,9 +260,55 @@ const LeadsDetails = () => {
           </table>
         </div>
 
-        {/* Historial de Cuentas */}
         <h2 className="text-xl font-semibold text-gray-800 mb-2">Historial de Cuentas</h2>
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+
+        {/* Campo de búsqueda para Historial de Cuentas */}
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Buscar en Historial..."
+            className="border-2 border-gray-300 px-3 py-2 rounded w-full focus:outline-none focus:border-blue-500 transition duration-200"
+            value={searchTermPast}
+            onChange={(e) => setSearchTermPast(e.target.value)} // Actualizamos el término de búsqueda para el historial
+          />
+        </div>
+
+        {/* Contenedor de botones de paginación para Historial */}
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex gap-2">
+            <button
+              onClick={handleHistoryDateOrder}
+              className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+              title="Ordenar por más recientes/más antiguos"
+            >
+              {historyOrderBy === 'asc' ? <FaRedoAlt /> : <FaUndoAlt />}
+            </button>
+            <button
+              onClick={prevHistoryPage}
+              className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+              title="Página anterior"
+            >
+              <FaChevronLeft />
+            </button>
+            <button
+              onClick={nextHistoryPage}
+              className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+              title="Página siguiente"
+            >
+              <FaChevronRight />
+            </button>
+            <button
+              onClick={showHistoryAllRecords ? showHistorySome : showHistoryAll} // Alterna entre mostrar todos los datos del historial o solo 5 registros
+              className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+              title={showHistoryAllRecords ? "Mostrar 5 registros" : "Mostrar todos los datos"}
+            >
+              {showHistoryAllRecords ? <FaChevronDown /> : <FaChevronUp />}
+            </button>
+          </div>
+        </div>
+
+        {/* Tabla de Historial de Cuentas */}
+        <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
           <table className="min-w-full text-sm">
             <thead className="bg-gray-800 text-white">
               <tr>
@@ -282,40 +317,6 @@ const LeadsDetails = () => {
                 {showColumns.start_date && <th className="py-3 px-4 text-left">Fecha Inicio</th>}
                 {showColumns.end_date && <th className="py-3 px-4 text-left">Fecha Fin</th>}
                 {showColumns.notes && <th className="py-3 px-4 text-left">Notas</th>}
-                {/* Botones de navegación dentro del encabezado del Historial de Cuentas */}
-                <th className="py-3 px-4 text-left">
-                  <div className="flex gap-1">
-                    <button
-                      onClick={prevPage}
-                      className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                      title="Página Anterior"
-                    >
-                      <FaChevronUp />
-                    </button>
-                    <button
-                      onClick={nextPage}
-                      className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                      title="Página Siguiente"
-                    >
-                      <FaChevronDown />
-                    </button>
-                    <button
-                      onClick={showAll}
-                      className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                      title="Mostrar Todos los Datos"
-                    >
-                      <FaChevronUp />
-                      <FaChevronDown />
-                    </button>
-                    <button
-                      onClick={handleDateOrder}
-                      className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                      title="Ordenar por Más Recientes/Más Antiguos"
-                    >
-                      {orderBy === 'asc' ? <FaRedoAlt /> : <FaUndoAlt />}
-                    </button>
-                  </div>
-                </th>
               </tr>
             </thead>
             <tbody>
@@ -326,7 +327,7 @@ const LeadsDetails = () => {
                   </td>
                 </tr>
               ) : (
-                filteredPastRelations.map(rel => (
+                paginateHistoryData(filteredPastRelations, historyPage).map(rel => (
                   <tr key={rel.id} className="border-b">
                     {showColumns.account_name && <td className="py-2 px-4">{rel.expand?.account_id?.name || '—'}</td>}
                     {showColumns.website && <td className="py-2 px-4">{rel.expand?.account_id?.website || '—'}</td>}
