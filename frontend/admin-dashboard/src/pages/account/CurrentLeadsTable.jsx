@@ -1,17 +1,8 @@
-import React, { useState } from "react";
-import {
-  FaTrashAlt,
-  FaChevronLeft,
-  FaChevronRight,
-  FaRedoAlt,
-  FaUndoAlt,
-  FaChevronUp,
-  FaChevronDown,
-} from "react-icons/fa";
+import React from "react";
+import { FaTrashAlt } from "react-icons/fa";
 
 const CurrentLeadsTable = ({
-  leads,
-  currentLeads,
+  displayedCurrentLeads,
   searchTerm,
   setSearchTerm,
   orderByCurrentLeads,
@@ -20,126 +11,76 @@ const CurrentLeadsTable = ({
   nextPageCurrentLeads,
   toggleShowAllCurrentLeads,
   showAllRecordsCurrentLeads,
-  displayedCurrentLeads,
   handleRemoveLead,
   setShowModal,
 }) => {
-  // Función para manejar la ordenación por más recientes/más antiguos
-  const handleSort = () => {
-    handleSortCurrentLeads(orderByCurrentLeads === "asc" ? "desc" : "asc");
-  };
-
   return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">
-        Leads Actuales en esta Cuenta
-      </h2>
+    <div>
+      <h2 className="text-xl font-semibold text-gray-700 mb-4">Leads Actuales en esta Cuenta</h2>
 
-      <div className="mb-4 w-full max-w-xs">
+      <div className="flex justify-between mb-4">
         <input
           type="text"
           placeholder="Buscar Lead..."
-          className="border-2 border-gray-300 px-3 py-2 rounded w-full focus:outline-none focus:border-blue-500 transition duration-200"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          className="border p-2 rounded w-full max-w-xs"
         />
+        <button
+          onClick={() => setShowModal(true)}
+          className="bg-green-600 text-white px-4 py-2 rounded ml-4 hover:bg-green-700"
+        >
+          + Crear Lead
+        </button>
       </div>
 
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex gap-2">
-          <button
-            onClick={handleSort} // Modificado para llamar handleSort
-            className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-            title="Ordenar por más recientes/más antiguos"
-          >
-            {orderByCurrentLeads === "asc" ? <FaRedoAlt /> : <FaUndoAlt />}
-          </button>
-          <button
-            onClick={prevPageCurrentLeads}
-            className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-            title="Página anterior"
-          >
-            <FaChevronLeft />
-          </button>
-          <button
-            onClick={nextPageCurrentLeads}
-            className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-            title="Página siguiente"
-          >
-            <FaChevronRight />
-          </button>
-          <button
-            onClick={toggleShowAllCurrentLeads}
-            className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-            title={
-              showAllRecordsCurrentLeads
-                ? "Mostrar menos registros"
-                : "Mostrar todos los registros"
-            }
-          >
-            {showAllRecordsCurrentLeads ? <FaChevronDown /> : <FaChevronUp />}
-          </button>
-        </div>
-      </div>
-
-      {displayedCurrentLeads.length > 0 ? (
-        <table className="min-w-full table-auto">
-          <thead className="bg-blue-900 text-white">
+      <table className="min-w-full bg-white border rounded">
+        <thead>
+          <tr className="bg-blue-900 text-white">
+            <th className="py-2 px-4 cursor-pointer" onClick={handleSortCurrentLeads}>
+              Nombre {orderByCurrentLeads === "asc" ? "↑" : "↓"}
+            </th>
+            <th className="py-2 px-4">Correo</th>
+            <th className="py-2 px-4">Inicio</th>
+            <th className="py-2 px-4">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {displayedCurrentLeads.length === 0 ? (
             <tr>
-              <th className="py-2 px-4 text-left">Nombre</th>
-              <th className="py-2 px-4 text-left">Correo</th>
-              <th className="py-2 px-4 text-left">Inicio</th>
-              <th className="py-2 px-4 text-left">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {displayedCurrentLeads.map((rel) => {
-              const lead = leads.find((l) => l.id === rel.lead_id);
-              return (
-                <tr key={rel.id} className="border-b">
-                  <td className="py-2 px-4">
-                    {lead ? `${lead.name} ${lead.last_name}` : "—"}
-                  </td>
-                  <td className="py-2 px-4">
-                    {lead?.work_email || lead?.personal_email || "—"}
-                  </td>
-                  <td className="py-2 px-4">{rel.start_date}</td>
-                  <td className="py-2 px-4">
-                    <button
-                      onClick={() => handleRemoveLead(rel.id)}
-                      className="border-2 border-red-500 text-red-500 px-3 py-1 rounded hover:bg-red-500 hover:text-white transition duration-200"
-                    >
-                      <FaTrashAlt />
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-            <tr>
-              <td colSpan="4" className="pt-4">
-                <button
-                  onClick={() => setShowModal(true)}
-                  className="border-2 border-green-600 text-green-600 px-4 py-2 rounded hover:bg-green-600 hover:text-white transition duration-200 flex items-center"
-                >
-                  + Crear Lead
-                </button>
+              <td colSpan="4" className="text-center py-4 text-gray-500">
+                No hay leads actuales para mostrar.
               </td>
             </tr>
-          </tbody>
-        </table>
-      ) : (
-        <div>
-          <p className="text-gray-600 mb-4">
-            No hay leads trabajando actualmente aquí.
-          </p>
-          <button
-            onClick={() => setShowModal(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Crear Lead
+          ) : (
+            displayedCurrentLeads.map((rel) => (
+              <tr key={rel.id} className="border-t">
+                <td className="py-2 px-4">{rel.lead?.name} {rel.lead?.last_name}</td>
+                <td className="py-2 px-4">{rel.lead?.work_email}</td>
+                <td className="py-2 px-4">{new Date(rel.start_date).toLocaleDateString()}</td>
+                <td className="py-2 px-4">
+                  <button
+                    onClick={() => handleRemoveLead(rel.id)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <FaTrashAlt />
+                  </button>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+
+      <div className="flex justify-between items-center mt-4">
+        <div className="space-x-2">
+          <button onClick={prevPageCurrentLeads} className="px-2 py-1 border rounded">{"<<"}</button>
+          <button onClick={toggleShowAllCurrentLeads} className="px-2 py-1 border rounded">
+            {showAllRecordsCurrentLeads ? "⬆️" : "⬇️"}
           </button>
+          <button onClick={nextPageCurrentLeads} className="px-2 py-1 border rounded">{">>"}</button>
         </div>
-      )}
+      </div>
     </div>
   );
 };

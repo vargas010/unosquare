@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../api/axiosConfig";
 
-// Componentes modularizados
 import AccountDetails from "./AccountDetails";
 import CurrentLeadsTable from "./CurrentLeadsTable";
 import PreviousLeadsTable from "./PreviousLeadsTable";
@@ -17,14 +16,96 @@ const AccountView = () => {
   const [leads, setLeads] = useState([]);
   const [currentLeads, setCurrentLeads] = useState([]);
   const [previousLeads, setPreviousLeads] = useState([]);
+  const [displayedCurrentLeads, setDisplayedCurrentLeads] = useState([]);
   const [selectedLead, setSelectedLead] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [orderByCurrentLeads, setOrderByCurrentLeads] = useState("asc");
+  const [orderByPreviousLeads, setOrderByPreviousLeads] = useState("asc");
+  const [currentPageCurrentLeads, setCurrentPageCurrentLeads] = useState(1);
+  const [currentPagePreviousLeads, setCurrentPagePreviousLeads] = useState(1);
+  const [rowsPerPage] = useState(5);
+  const [showAllRecordsCurrentLeads, setShowAllRecordsCurrentLeads] = useState(false);
+  const [showAllRecordsPreviousLeads, setShowAllRecordsPreviousLeads] = useState(false);
 
   const [quickLead, setQuickLead] = useState({
     name: '',
     last_name: '',
     work_email: ''
   });
+
+  useEffect(() => {
+    api.get(`/accounts/${id}`)
+      .then(res => setAccount(res.data))
+      .catch(err => console.error("Error al cargar la cuenta:", err));
+    fetchRelations();
+    fetchLeads();
+  }, [id]);
+
+  useEffect(() => {
+    const leadsAMostrar = showAllRecordsCurrentLeads
+      ? currentLeads
+      : currentLeads.slice(
+          (currentPageCurrentLeads - 1) * rowsPerPage,
+          currentPageCurrentLeads * rowsPerPage
+        );
+    setDisplayedCurrentLeads(leadsAMostrar);
+  }, [currentLeads, currentPageCurrentLeads, showAllRecordsCurrentLeads]);
+
+  const fetchRelations = async () => {
+  console.log("🔄 Paso 1: Iniciando fetchRelations...");
+
+  try {
+    const res = await api.get(`/account-leads/all`);
+    console.log("🟢 Paso 2: Relaciones crudas obtenidas:", res.data);
+
+    const relaciones = res.data || [];
+    console.log("🔍 Paso 3: Total relaciones obtenidas:", relaciones.length);
+
+    const relacionesConCuenta = relaciones.filter(
+      (r) => String(r.account_id) === String(id)
+    );
+    console.log("🔗 Paso 4: Relaciones que coinciden con cuenta:", relacionesConCuenta.length);
+
+    const relacionesConExpand = relacionesConCuenta.map((r) => ({
+      ...r,
+      lead: r.expand?.lead_id || null,
+    }));
+
+    const relacionesValidas = relacionesConExpand.filter((r) => r.lead !== null);
+
+    const actuales = relacionesValidas.filter(
+      (r) =>
+        !r.end_date ||
+        r.end_date === "" ||
+        r.end_date === null ||
+        r.end_date === "0001-01-01 00:00:00Z"
+    );
+
+    const anteriores = relacionesValidas.filter(
+      (r) =>
+        r.end_date &&
+        r.end_date !== "" &&
+        r.end_date !== null &&
+        r.end_date !== "0001-01-01 00:00:00Z"
+    );
+
+    setCurrentLeads(actuales);
+    setDisplayedCurrentLeads(actuales);
+    setPreviousLeads(anteriores);
+
+    console.log("✅ Paso 9: Leads asignados al estado. Fin de fetchRelations.");
+  } catch (err) {
+    console.error("❌ Error al cargar relaciones:", err);
+  }
+};
+
+
+  const fetchLeads = () => {
+    api.get('/leads')
+      .then(res => setLeads(res.data.items || []))
+      .catch(err => console.error("Error al cargar leads:", err));
+  };
 
   const handleQuickLeadChange = (e) => {
     setQuickLead({ ...quickLead, [e.target.name]: e.target.value });
@@ -35,7 +116,6 @@ const AccountView = () => {
     try {
       const res = await api.post('/leads', quickLead);
       const createdLead = res.data;
-
       const nowUTC = new Date().toISOString();
       await api.post('/account-leads', {
         account_id: account.id,
@@ -44,7 +124,6 @@ const AccountView = () => {
         end_date: null,
         notes: ''
       });
-
       setShowModal(false);
       setQuickLead({ name: '', last_name: '', work_email: '' });
       fetchRelations();
@@ -56,8 +135,7 @@ const AccountView = () => {
 
   const handleAssignLead = (e) => {
     e.preventDefault();
-    const today = new Date().toISOString().split("T")[0];
-
+    const today = new Date().toISOString();
     const payload = {
       account_id: account.id,
       lead_id: selectedLead,
@@ -65,81 +143,38 @@ const AccountView = () => {
       end_date: null,
       notes: ""
     };
-
+    console.log("📦 Payload a enviar:", payload);
     api.post('/account-leads', payload)
       .then(() => {
         setSelectedLead('');
         fetchRelations();
       })
-      .catch(err => console.error("Error al agregar lead:", err));
-  };
-
-  const [searchTerm, setSearchTerm] = useState('');
-  const [orderByCurrentLeads, setOrderByCurrentLeads] = useState('asc');
-  const [orderByPreviousLeads, setOrderByPreviousLeads] = useState('asc');
-  const [currentPageCurrentLeads, setCurrentPageCurrentLeads] = useState(1);
-  const [currentPagePreviousLeads, setCurrentPagePreviousLeads] = useState(1);
-  const [rowsPerPage] = useState(5);
-  const [showAllRecordsCurrentLeads, setShowAllRecordsCurrentLeads] = useState(false);
-  const [showAllRecordsPreviousLeads, setShowAllRecordsPreviousLeads] = useState(false);
-
-  useEffect(() => {
-    api.get(`/accounts/${id}`)
-      .then(res => setAccount(res.data))
-      .catch(err => console.error("Error al cargar la cuenta:", err));
-
-    fetchRelations();
-    fetchLeads();
-  }, [id]);
-
-  const fetchRelations = () => {
-    api.get('/account-leads?expand=lead_id')
-      .then(res => {
-        const relaciones = res.data.items || [];
-        const actuales = relaciones.filter(r => r.account_id === id && !r.end_date);
-        const anteriores = relaciones.filter(r => r.account_id === id && r.end_date);
-        setCurrentLeads(actuales);
-        setPreviousLeads(anteriores);
-      })
-      .catch(err => console.error("Error al cargar relaciones:", err));
-  };
-
-  const fetchLeads = () => {
-    api.get('/leads')
-      .then(res => setLeads(res.data.items || []))
-      .catch(err => console.error("Error al cargar leads:", err));
-  };
-
-  const handleSortCurrentLeads = () => {
-    const newOrder = orderByCurrentLeads === 'asc' ? 'desc' : 'asc';
-    setOrderByCurrentLeads(newOrder);
-
-    const sortedLeads = [...currentLeads].sort((a, b) => {
-      const nameA = a.name?.toUpperCase() || '';
-      const nameB = b.name?.toUpperCase() || '';
-      return newOrder === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
-    });
-
-    setCurrentLeads(sortedLeads);
+      .catch(err => {
+        if (err.response && err.response.status === 409) {
+          alert("⚠️ Error: Este lead ya está asignado a esta cuenta.");
+        } else {
+          console.error("❌ Error al agregar lead:", err);
+        }
+      });
   };
 
   const prevPageCurrentLeads = () => {
     if (currentPageCurrentLeads > 1) setCurrentPageCurrentLeads(currentPageCurrentLeads - 1);
   };
-
   const nextPageCurrentLeads = () => {
     const totalPages = Math.ceil(currentLeads.length / rowsPerPage);
     if (currentPageCurrentLeads < totalPages) setCurrentPageCurrentLeads(currentPageCurrentLeads + 1);
   };
-
   const prevPagePreviousLeads = () => {
     if (currentPagePreviousLeads > 1) setCurrentPagePreviousLeads(currentPagePreviousLeads - 1);
   };
-
   const nextPagePreviousLeads = () => {
     const totalPages = Math.ceil(previousLeads.length / rowsPerPage);
     if (currentPagePreviousLeads < totalPages) setCurrentPagePreviousLeads(currentPagePreviousLeads + 1);
   };
+
+  const toggleShowAllCurrentLeads = () => setShowAllRecordsCurrentLeads(!showAllRecordsCurrentLeads);
+  const toggleShowAllPreviousLeads = () => setShowAllRecordsPreviousLeads(!showAllRecordsPreviousLeads);
 
   const handleRemoveLead = (relationId) => {
     if (window.confirm("¿Deseas marcar este lead como finalizado en esta cuenta?")) {
@@ -150,24 +185,21 @@ const AccountView = () => {
     }
   };
 
-  const toggleShowAllCurrentLeads = () => setShowAllRecordsCurrentLeads(!showAllRecordsCurrentLeads);
-  const toggleShowAllPreviousLeads = () => setShowAllRecordsPreviousLeads(!showAllRecordsPreviousLeads);
-
   const handleRestoreLead = (relationId) => {
     const leadToRestore = previousLeads.find(rel => rel.id === relationId);
     if (leadToRestore) {
-      const today = new Date().toISOString().split("T")[0];
+      const today = new Date().toISOString();
       api.patch(`/account-leads/${relationId}`, { end_date: null })
         .then(() => {
-          api.post('/account-leads', {
+          return api.post('/account-leads', {
             account_id: account.id,
             lead_id: leadToRestore.lead_id,
             start_date: today,
             end_date: null,
             notes: ''
           });
-          fetchRelations();
         })
+        .then(() => fetchRelations())
         .catch(err => console.error("Error al restaurar el lead:", err));
     }
   };
@@ -181,22 +213,16 @@ const AccountView = () => {
       <AccountDetails account={account} />
 
       <CurrentLeadsTable
-        leads={leads}
         currentLeads={currentLeads}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         orderByCurrentLeads={orderByCurrentLeads}
-        handleSortCurrentLeads={handleSortCurrentLeads}
+        handleSortCurrentLeads={() => setOrderByCurrentLeads(orderByCurrentLeads === 'asc' ? 'desc' : 'asc')}
         prevPageCurrentLeads={prevPageCurrentLeads}
         nextPageCurrentLeads={nextPageCurrentLeads}
         toggleShowAllCurrentLeads={toggleShowAllCurrentLeads}
         showAllRecordsCurrentLeads={showAllRecordsCurrentLeads}
-        displayedCurrentLeads={showAllRecordsCurrentLeads
-          ? currentLeads
-          : currentLeads.slice(
-              (currentPageCurrentLeads - 1) * rowsPerPage,
-              currentPageCurrentLeads * rowsPerPage
-            )}
+        displayedCurrentLeads={displayedCurrentLeads}
         handleRemoveLead={handleRemoveLead}
         setShowModal={setShowModal}
       />
