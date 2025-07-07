@@ -1,26 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api/axiosConfig';
 import EditTypeModal from "./EditTypeModal";
-
+import { FaChevronLeft, FaChevronRight, FaChevronUp, FaChevronDown } from 'react-icons/fa';
 
 const TypesView = () => {
   const [types, setTypes] = useState([]);
   const [accounts, setAccounts] = useState([]);
-
+  const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [newType, setNewType] = useState({ name: '', description: '' });
-
   const [showEditModal, setShowEditModal] = useState(false);
   const [editType, setEditType] = useState(null);
-
+  const [page, setPage] = useState(1);
+  const [perPage] = useState(5);  // Cambia el número de registros por página según necesites
 
   useEffect(() => {
     fetchTypes();
     fetchAccounts();
-  }, []);
+  }, [page]);
 
   const fetchTypes = async () => {
     const res = await api.get('/types');
+    console.log(res.data.items);
     setTypes(res.data.items || []);
   };
 
@@ -37,17 +38,21 @@ const TypesView = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Submit triggered"); // <- Esto debe aparecer
-
+    if (!newType.name || !newType.description) {
+      alert("Por favor, complete todos los campos.");
+      return;
+    }
     try {
-      await api.put(`/types/${typeData.id}`, {
-        name: typeData.name,
-        description: typeData.description,
+      await api.post('/types', {
+        name: newType.name,
+        description: newType.description,
       });
-      console.log("Type updated"); // <- Esto también
-      await onSave();  // actualiza tabla y cierra modal
+      setNewType({ name: '', description: '' });
+      fetchTypes();
+      setShowModal(false);
     } catch (err) {
-      console.error("Error actualizando tipo:", err);
+      console.error("Error al guardar tipo:", err);
+      alert("Hubo un error al guardar el tipo.");
     }
   };
 
@@ -57,24 +62,37 @@ const TypesView = () => {
 
     try {
       await api.delete(`/types/${typeId}`);
-      fetchTypes(); // Refresca la lista después de eliminar
+      fetchTypes();
     } catch (err) {
       console.error("Error al eliminar tipo:", err);
       alert("No se pudo eliminar el tipo. Asegúrate de que no esté asignado a ninguna cuenta.");
     }
   };
 
-
   const openEditModal = (type) => {
     setEditType(type);
     setShowEditModal(true);
   };
 
+  // Paginación
+  const filteredTypes = types.filter(type =>
+    type.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  const totalPages = Math.ceil(filteredTypes.length / perPage);
+  const currentTypes = filteredTypes.slice((page - 1) * perPage, page * perPage);
 
   return (
     <div className="p-6 relative">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Tipos de Cuenta</h1>
+      {/* Filtro de búsqueda */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+        <input
+          type="text"
+          placeholder="Buscar Tipo..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="border-2 border-gray-300 px-3 py-2 rounded w-full max-w-xs focus:outline-none focus:border-blue-500 transition"
+        />
         <button
           onClick={() => setShowModal(true)}
           className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
@@ -83,41 +101,71 @@ const TypesView = () => {
         </button>
       </div>
 
-      <table className="min-w-full bg-white shadow rounded-lg">
-        <thead className="bg-blue-900 text-white">
-          <tr>
-            <th className="py-2 px-4 text-left">Tipo</th>
-            <th className="py-2 px-4 text-left">Descripción</th>
-            <th className="py-2 px-4 text-left">Cantidad de Cuentas</th>
-            <th className="py-2 px-4 text-left">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {types.map((type) => (
-            <tr key={type.id} className="border-b">
-              <td className="py-2 px-4">{type.name}</td>
-              <td className="py-2 px-4">{type.description || '—'}</td>
-              <td className="py-2 px-4">{getCountByType(type.id)}</td>
-              <td className="py-2 px-4 space-x-2">
-                <button
-                  onClick={() => openEditModal(type)}
-                  className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 text-sm"
-                >
-                  Editar
-                </button>
-                <button
-                  onClick={() => handleDelete(type.id)}
-                  className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
-                >
-                  Eliminar
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* Paginación */}
+      <div className="flex justify-start gap-2 mb-4">
+        <button
+          onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+          className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+          title="Página anterior"
+        >
+          <FaChevronLeft />
+        </button>
+        <button
+          onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
+          className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+          title="Página siguiente"
+        >
+          <FaChevronRight />
+        </button>
+        <button
+          onClick={() => setPage(totalPages)}
+          className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+          title="Ir a última página"
+        >
+          <FaChevronDown />
+        </button>
+      </div>
 
-      {/* MODAL */}
+      {/* Tabla de tipos de cuenta */}
+      {currentTypes.length > 0 ? (
+        <table className="min-w-full bg-white shadow rounded-lg">
+          <thead className="bg-blue-900 text-white">
+            <tr>
+              <th className="py-2 px-4 text-left">Tipo</th>
+              <th className="py-2 px-4 text-left">Descripción</th>
+              <th className="py-2 px-4 text-left">Cantidad de Cuentas</th>
+              <th className="py-2 px-4 text-left">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {currentTypes.map((type) => (
+              <tr key={type.id} className="border-b">
+                <td className="py-2 px-4">{type.name}</td>
+                <td className="py-2 px-4">{type.description || '—'}</td>
+                <td className="py-2 px-4">{getCountByType(type.id)}</td>
+                <td className="py-2 px-4 space-x-2">
+                  <button
+                    onClick={() => openEditModal(type)}
+                    className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 text-sm"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => handleDelete(type.id)}
+                    className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
+                  >
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p>No hay tipos para mostrar.</p>
+      )}
+
+      {/* Modal para agregar tipo */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white w-full max-w-md p-6 rounded-lg shadow-lg">
@@ -161,6 +209,8 @@ const TypesView = () => {
           </div>
         </div>
       )}
+
+      {/* Modal para editar tipo */}
       {showEditModal && editType && (
         <EditTypeModal
           typeData={editType}

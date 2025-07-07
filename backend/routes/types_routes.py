@@ -5,16 +5,23 @@ types_bp = Blueprint('types', __name__)
 
 POCKETBASE_URL = "http://127.0.0.1:8090"
 
-
 @types_bp.route('/types', methods=['GET'])
 def get_types():
     try:
-        response = requests.get(f"{POCKETBASE_URL}/api/collections/types/records?perPage=200")
-        response.raise_for_status()
-        return jsonify(response.json())
+        all_types = []
+        page = 1
+        while True:
+            response = requests.get(f"{POCKETBASE_URL}/api/collections/types/records?perPage=200&page={page}")
+            response.raise_for_status()
+            data = response.json()
+            all_types.extend(data['items'])
+            if len(data['items']) < 200:
+                break  # Si los registros devueltos son menores a 200, significa que no hay más páginas
+            page += 1
+
+        return jsonify({'items': all_types})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @types_bp.route('/types', methods=['POST'])
 def create_type():
@@ -56,7 +63,7 @@ def update_type(type_id):
         print(f"Error actualizando tipo: {str(e)}")  # Imprime el error en la consola del backend
         return jsonify({"error": str(e)}), 500  # Devuelve el error con el código 500
 
-
+# ✅ Eliminar tipo
 @types_bp.route('/types/<string:type_id>', methods=['DELETE'])
 def delete_type(type_id):
     try:
