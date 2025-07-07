@@ -42,10 +42,22 @@ const EditTypeModal = ({
 
         if (shouldBeAssigned && !isCurrentlyAssigned) {
             // Si la cuenta debe ser asignada y no lo está, realiza un PATCH
-            return api.patch(`/accounts/${acc.id}`, { type_id: typeData.id });
+            return api.patch(`/accounts/${acc.id}`, {
+            type_id: typeData.id,
+            name: acc.name,  // Asegúrate de incluir el nombre
+            website: acc.website,  // Asegúrate de incluir el sitio web
+            phone: acc.phone,  // Asegúrate de incluir el teléfono
+            tax_id: acc.tax_id,  // Asegúrate de incluir el tax_id
+            });
         } else if (!shouldBeAssigned && isCurrentlyAssigned) {
             // Si la cuenta no debe estar asignada y está asignada, realiza un PATCH para quitarla
-            return api.patch(`/accounts/${acc.id}`, { type_id: "" });
+            return api.patch(`/accounts/${acc.id}`, {
+            type_id: "",  // Limpia el tipo asignado
+            name: acc.name,  // Mantén el nombre
+            website: acc.website,  // Mantén el sitio web
+            phone: acc.phone,  // Mantén el teléfono
+            tax_id: acc.tax_id,  // Mantén el tax_id
+            });
         }
         return null;
         });
@@ -57,6 +69,7 @@ const EditTypeModal = ({
         console.error("Error al actualizar tipo:", err);
     }
     };
+
 
 
   return (
