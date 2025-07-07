@@ -7,12 +7,14 @@ import AccountForm from "./pages/account/AccountForm";
 import LeadForm from "./pages/LeadForm"; 
 import AccountLeadsForm from "./pages/AccountLeadsForm";
 import AccountView from "./pages/account/AccountView";
-import LeadDetail from "./pages/LeadDetail"; 
+import LeadDetail from "./pages/LeadDetail";
+import TypesView from './pages/TypesView';
+
 
 const Dashboard = () => (
   <>
     <h1 className="text-3xl font-semibold text-gray-800">Dashboard</h1>
-    <p className="text-gray-600 mt-2">Bienvenido a admin</p>
+    <p className="text-gray-600 mt-2">Bienvenido a la parte administrativa</p>
   </>
 );
 
@@ -24,14 +26,15 @@ function App() {
         <Route path="/leads/view/:id" element={<LeadDetail />} />
         <Route path="/accounts/view/:id" element={<AccountView />} />
         <Route path="/accounts" element={<Accounts />} />
-        <Route path="/accounts/create" element={<AccountForm />} /> {/* NUEVO */}
-        <Route path="/accounts/edit/:id" element={<AccountForm />} /> {/* NUEVO */}
+        <Route path="/accounts/create" element={<AccountForm />} />
+        <Route path="/accounts/edit/:id" element={<AccountForm />} />
         <Route path="/leads" element={<Leads />} />
         <Route path="/account-leads" element={<AccountLeads />} />
         <Route path="/leads/create" element={<LeadForm />} />
         <Route path="/leads/edit/:id" element={<LeadForm />} />
         <Route path="/account-leads/create" element={<AccountLeadsForm />} />
         <Route path="/account-leads/edit/:id" element={<AccountLeadsForm />} />
+        <Route path="/types" element={<TypesView />} />
 
       </Routes>
     </AdminLayout>

@@ -133,20 +133,19 @@ const AccountView = () => {
     }
   };
 
-  const handleAssignLead = (e) => {
-    e.preventDefault();
-    const today = new Date().toISOString();
+  const handleAssignLead = ({ leadId, startDate }) => {
     const payload = {
       account_id: account.id,
-      lead_id: selectedLead,
-      start_date: today,
+      lead_id: leadId,
+      start_date: startDate,
       end_date: null,
       notes: ""
     };
+
     console.log("📦 Payload a enviar:", payload);
+
     api.post('/account-leads', payload)
       .then(() => {
-        setSelectedLead('');
         fetchRelations();
       })
       .catch(err => {
@@ -157,6 +156,7 @@ const AccountView = () => {
         }
       });
   };
+
 
   const prevPageCurrentLeads = () => {
     if (currentPageCurrentLeads > 1) setCurrentPageCurrentLeads(currentPageCurrentLeads - 1);
@@ -185,24 +185,27 @@ const AccountView = () => {
     }
   };
 
-  const handleRestoreLead = (relationId) => {
-    const leadToRestore = previousLeads.find(rel => rel.id === relationId);
-    if (leadToRestore) {
-      const today = new Date().toISOString();
-      api.patch(`/account-leads/${relationId}`, { end_date: null })
-        .then(() => {
-          return api.post('/account-leads', {
-            account_id: account.id,
-            lead_id: leadToRestore.lead_id,
-            start_date: today,
-            end_date: null,
-            notes: ''
-          });
-        })
-        .then(() => fetchRelations())
-        .catch(err => console.error("Error al restaurar el lead:", err));
+  const handleRestoreLead = async (relationId) => {
+    try {
+      const relation = previousLeads.find(rel => rel.id === relationId);
+      if (!relation) return;
+
+      // Quitar fecha de fin (marcar como activo)
+      const today = new Date().toISOString().split("T")[0];
+      await api.patch(`/account-leads/${relationId}`, { end_date: null });
+
+      // Actualizar estados localmente sin esperar a refetch
+      const updatedRelation = { ...relation, end_date: null };
+
+      setPreviousLeads((prev) => prev.filter((r) => r.id !== relationId));
+      setCurrentLeads((prev) => [...prev, updatedRelation]);
+      setDisplayedCurrentLeads((prev) => [...prev, updatedRelation]);
+
+    } catch (err) {
+      console.error("Error al restaurar el lead:", err);
     }
   };
+
 
   if (!account) return <div className="p-6">Cargando detalles de la cuenta...</div>;
 

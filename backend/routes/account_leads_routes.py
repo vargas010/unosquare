@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from datetime import datetime
 import requests
 
 account_leads_bp = Blueprint('account_leads', __name__)
@@ -39,6 +40,8 @@ def create_account_lead():
         data = request.get_json()
         account_id = data.get("account_id")
         lead_id = data.get("lead_id")
+
+        start_date = data.get("start_date", datetime.utcnow().strftime('%Y-%m-%d'))
 
         # 🔎 Validar duplicado activo
         existing = requests.get("http://127.0.0.1:8090/api/collections/account_leads/records?perPage=200")

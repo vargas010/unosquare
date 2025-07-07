@@ -39,7 +39,7 @@ def get_account_by_id(account_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-@accounts_bp.route('/accounts/<string:account_id>', methods=['PUT'])
+@accounts_bp.route('/accounts/<string:account_id>', methods=['PATCH', 'PUT'])  # Permite tanto PATCH como PUT
 def update_account(account_id):
     try:
         data = request.get_json()
@@ -48,10 +48,11 @@ def update_account(account_id):
             "website": data.get("website"),
             "address": data.get("address"),
             "phone": data.get("phone"),
-            "tax_id": data.get("tax_id")
+            "tax_id": data.get("tax_id"),
+            "type_id": data.get("type_id")  # Asegúrate de incluir type_id en el payload
         }
         url = f"http://127.0.0.1:8090/api/collections/accounts/records/{account_id}"
-        response = requests.patch(url, json=payload)
+        response = requests.patch(url, json=payload)  # Usa PATCH para actualizar parcialmente
         response.raise_for_status()
         return jsonify(response.json())
     except Exception as e:
