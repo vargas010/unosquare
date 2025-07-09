@@ -12,10 +12,25 @@ const AccountForm = () => {
     website: '',
     address: '',
     phone: '',
-    tax_id: ''
+    tax_id: '',
+    industry_type: '' // Nuevo campo para el tipo de industria
   });
 
+  const [industries, setIndustries] = useState([]); // Estado para almacenar los tipos de industria
+  const [newIndustryName, setNewIndustryName] = useState(''); // Estado para el nuevo tipo de industria
+  const [showModal, setShowModal] = useState(false); // Estado para mostrar el modal
+
   useEffect(() => {
+    // Cargar los tipos de industria
+    api.get('/types')
+      .then(res => {
+        setIndustries(res.data.items || []); // Establecer los tipos de industria
+      })
+      .catch(err => {
+        console.error("Error al cargar los tipos de industria:", err);
+      });
+
+    // Si es un formulario de edición, cargar los datos
     if (isEdit) {
       api.get(`/accounts/${id}`)
         .then(res => {
@@ -25,7 +40,8 @@ const AccountForm = () => {
             website: data.website || '',
             address: data.address || '',
             phone: data.phone || '',
-            tax_id: data.tax_id || ''
+            tax_id: data.tax_id || '',
+            industry_type: data.industry_type || '' // Cargar el tipo de industria si existe
           });
         })
         .catch(err => {
@@ -40,7 +56,12 @@ const AccountForm = () => {
 
   const handleSubmit = e => {
     e.preventDefault();
-    const request = isEdit ? api.put(`/accounts/${id}`, form) : api.post('/accounts', form);
+    const requestData = { 
+      ...form, 
+      industry_type: form.industry_type || '' // Asegúrate de incluir el tipo de industria
+    };
+
+    const request = isEdit ? api.put(`/accounts/${id}`, requestData) : api.post('/accounts', requestData);
 
     request
       .then(() => {
@@ -48,6 +69,26 @@ const AccountForm = () => {
       })
       .catch(err => {
         console.error('Error al guardar la cuenta:', err);
+      });
+  };
+
+  // Función para crear un nuevo tipo de industria
+  const handleCreateIndustry = () => {
+    api.post('/types', { name: newIndustryName })
+      .then(() => {
+        // Recargar los tipos de industria
+        api.get('/types')
+          .then(res => {
+            setIndustries(res.data.items || []); // Actualiza la lista de tipos de industria
+            setShowModal(false); // Cerrar el modal
+            setNewIndustryName(''); // Limpiar el input
+          })
+          .catch(err => {
+            console.error("Error al cargar los tipos de industria:", err);
+          });
+      })
+      .catch(err => {
+        console.error("Error al crear el tipo de industria:", err);
       });
   };
 
@@ -65,6 +106,35 @@ const AccountForm = () => {
           <input type="text" name="phone" value={form.phone} onChange={handleChange} placeholder="Teléfono" className="p-2 border rounded" />
           <input type="text" name="tax_id" value={form.tax_id} onChange={handleChange} placeholder="NIT" className="p-2 border rounded" />
         </div>
+
+        {/* Campo para seleccionar el tipo de industria */}
+        <div className="grid grid-cols-2 gap-4">
+          <label className="p-2">Tipo de Industria</label>
+          <select
+            name="industry_type"
+            value={form.industry_type}
+            onChange={handleChange}
+            className="p-2 border rounded"
+            required
+          >
+            <option value="">Selecciona un tipo de industria</option>
+            {industries.map((industry) => (
+              <option key={industry.id} value={industry.id}>
+                {industry.name}
+              </option>
+            ))}
+          </select>
+
+          {/* Botón para crear un nuevo tipo de industria */}
+          <button
+            type="button"
+            onClick={() => setShowModal(true)}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          >
+            Crear Nuevo Tipo
+          </button>
+        </div>
+
         <div className="flex gap-4">
           <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
             {isEdit ? 'Actualizar' : 'Crear'}
@@ -74,6 +144,38 @@ const AccountForm = () => {
           </button>
         </div>
       </form>
+
+      {/* Modal para crear nuevo tipo de industria */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white w-full max-w-md p-6 rounded-lg shadow-lg">
+            <h2 className="text-xl font-semibold mb-4">Nuevo Tipo de Industria</h2>
+            <input
+              type="text"
+              value={newIndustryName}
+              onChange={(e) => setNewIndustryName(e.target.value)}
+              className="w-full border px-3 py-2 rounded"
+              placeholder="Nombre del nuevo tipo de industria"
+            />
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleCreateIndustry}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                Crear
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
