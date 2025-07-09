@@ -1,66 +1,53 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaTrashAlt,
   FaChevronLeft,
   FaChevronRight,
   FaChevronUp,
   FaChevronDown,
+  FaRedoAlt,
+  FaUndoAlt,
 } from "react-icons/fa";
 
 const CurrentLeadsTable = ({
   displayedCurrentLeads,
-  searchTerm,
-  setSearchTerm,
-  orderByCurrentLeads,
-  handleSortCurrentLeads,
-  prevPageCurrentLeads,
-  nextPageCurrentLeads,
+  setShowModal,
+  handleRemoveLead,
   toggleShowAllCurrentLeads,
   showAllRecordsCurrentLeads,
-  handleRemoveLead,
-  setShowModal,
 }) => {
-  const [sortOrder, setSortOrder] = useState("asc");
-  const [rotate, setRotate] = useState(false);
-  const [searchTermLocal, setSearchTermLocal] = useState(''); // Estado de búsqueda local para esta tabla
-  const [currentPage, setCurrentPage] = useState(1); // Estado de la página actual
-  const leadsPerPage = showAllRecordsCurrentLeads ? displayedCurrentLeads.length : 5; // Mostrar todos los registros o solo 5
+  const [sortOrder, setSortOrder] = useState("asc"); // Estado para el orden
+  const [currentPage, setCurrentPage] = useState(1); // Página actual
+  const leadsPerPage = 5; // Siempre mostramos 5 registros por página
+
+  useEffect(() => {
+    console.log("Datos cargados:", displayedCurrentLeads);
+  }, [displayedCurrentLeads]);
 
   const handleSearchChange = (e) => {
-    setSearchTermLocal(e.target.value); // Cambia el estado de la búsqueda solo para esta tabla
-    setCurrentPage(1); // Reinicia la página a la 1 cuando se realiza una búsqueda
+    // Aquí iría la lógica de búsqueda si es necesario
   };
 
   const handleSortOrder = () => {
     setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
-    setRotate(!rotate); // Cambia la dirección de la rotación al hacer clic
+    setCurrentPage(1); // Resetear a la primera página cuando se ordena
   };
 
-  // Filtrar leads por el término de búsqueda local (en toda la lista de leads)
-  const filteredLeads = displayedCurrentLeads.filter((lead) => {
-    return (
-      lead.lead?.name.toLowerCase().includes(searchTermLocal.toLowerCase()) ||
-      lead.lead?.last_name.toLowerCase().includes(searchTermLocal.toLowerCase())
-    );
-  });
-
-  // Ordenar leads por fecha de inicio
-  const sortedLeads = filteredLeads.sort((a, b) => {
+  // Ordenamos todos los registros por fecha
+  const sortedLeads = displayedCurrentLeads.sort((a, b) => {
     const dateA = new Date(a.start_date);
     const dateB = new Date(b.start_date);
 
-    // Si alguna de las fechas no es válida, no se ordenan
-    if (isNaN(dateA) || isNaN(dateB)) return 0;
+    if (isNaN(dateA) || isNaN(dateB)) return 0; // Si alguna de las fechas no es válida, no las ordenamos
 
     return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
   });
 
-  // Paginación
-  const totalPages = Math.ceil(sortedLeads.length / leadsPerPage); // Número total de páginas
-  const currentPageLeads = sortedLeads.slice(
-    (currentPage - 1) * leadsPerPage,
-    currentPage * leadsPerPage
-  ); // Obtener los leads correspondientes a la página actual
+  // Paginación: calculamos la cantidad de páginas necesarias
+  const totalPages = Math.ceil(sortedLeads.length / leadsPerPage); // Total de páginas
+  const currentPageLeads = showAllRecordsCurrentLeads
+    ? sortedLeads // Muestra todos los registros si "Mostrar Todo" está activado
+    : sortedLeads.slice((currentPage - 1) * leadsPerPage, currentPage * leadsPerPage); // Solo muestra 5 si la paginación está activa
 
   const handleNextPage = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
@@ -71,8 +58,8 @@ const CurrentLeadsTable = ({
   };
 
   const toggleShowAll = () => {
-    toggleShowAllCurrentLeads(!showAllRecordsCurrentLeads); // Cambia entre mostrar todo o 5 registros
-    setCurrentPage(1); // Resetea a la página 1
+    toggleShowAllCurrentLeads(!showAllRecordsCurrentLeads); // Alternar entre mostrar todo o 5 registros
+    setCurrentPage(1); // Resetea la página a la 1 cuando cambias la cantidad de registros
   };
 
   return (
@@ -82,12 +69,11 @@ const CurrentLeadsTable = ({
       </h2>
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-        {/* Input de búsqueda solo afecta a esta tabla */}
         <input
           type="text"
           placeholder="Buscar Lead..."
-          value={searchTermLocal}
-          onChange={handleSearchChange} // Actualiza solo el estado de búsqueda local
+          value=""
+          onChange={handleSearchChange}
           className="border-2 border-gray-300 px-3 py-2 rounded w-full max-w-xs focus:outline-none focus:border-blue-500 transition"
         />
 
@@ -99,53 +85,51 @@ const CurrentLeadsTable = ({
         </button>
       </div>
 
-      {/* Ordenar por más recientes / más antiguos */}
-      <div className="flex justify-start gap-2 mb-4">
-        <button
-          onClick={handleSortOrder}
-          className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transform transition-transform duration-1000"
-          title="Ordenar por más recientes/más antiguos"
-        >
-          <svg
-            stroke="currentColor"
-            fill="currentColor"
-            strokeWidth="0"
-            viewBox="0 0 512 512"
-            height="1em"
-            width="1em"
-            xmlns="http://www.w3.org/2000/svg"
-            className={`${sortOrder === 'desc' ? 'rotate-180' : ''}`} // Aplica la rotación si el orden es descendente
+      {/* Botones de ordenación, paginación y "Mostrar todo" */}
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex gap-2">
+          <button
+            onClick={handleSortOrder}
+            className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer"
+            title="Ordenar por más recientes/más antiguos"
           >
-            <path d="M255.545 8c-66.269.119-126.438 26.233-170.86 68.685L48.971 40.971C33.851 25.851 8 36.559 8 57.941V192c0 13.255 10.745 24 24 24h134.059c21.382 0 32.09-25.851 16.971-40.971l-41.75-41.75c30.864-28.899 70.801-44.907 113.23-45.273 92.398-.798 170.283 73.977 169.484 169.442C423.236 348.009 349.816 424 256 424c-41.127 0-79.997-14.678-110.63-41.556-4.743-4.161-11.906-3.908-16.368.553L89.34 422.659c-4.872 4.872-4.631 12.815.482 17.433C133.798 479.813 192.074 504 256 504c136.966 0 247.999-111.033 248-247.998C504.001 119.193 392.354 7.755 255.545 8z"></path>
-          </svg>
-        </button>
-        <button
-          onClick={handlePrevPage}
-          className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-          title="Página anterior"
-        >
-          <FaChevronLeft />
-        </button>
-        <button
-          onClick={handleNextPage}
-          className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-          title="Página siguiente"
-        >
-          <FaChevronRight />
-        </button>
+            {sortOrder === "asc" ? <FaRedoAlt /> : <FaUndoAlt />}
+          </button>
 
-        {/* Botón para mostrar más o menos registros */}
-        <button
-          onClick={toggleShowAll}
-          className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-          title={
-            showAllRecordsCurrentLeads
-              ? "Mostrar menos registros"
-              : "Mostrar todos los registros"
-          }
-        >
-          {showAllRecordsCurrentLeads ? <FaChevronDown /> : <FaChevronUp />}
-        </button>
+          {/* Solo mostramos botones de paginación si no estamos mostrando todos los registros */}
+          {!showAllRecordsCurrentLeads && (
+            <>
+              <button
+                onClick={handlePrevPage}
+                className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer"
+                title="Página anterior"
+                disabled={currentPage === 1} // Deshabilitar si estamos en la primera página
+              >
+                <FaChevronLeft />
+              </button>
+              <button
+                onClick={handleNextPage}
+                className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer"
+                title="Página siguiente"
+                disabled={currentPage === totalPages} // Deshabilitar si estamos en la última página
+              >
+                <FaChevronRight />
+              </button>
+            </>
+          )}
+
+          <button
+            onClick={toggleShowAll}
+            className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer"
+            title={
+              showAllRecordsCurrentLeads
+                ? "Mostrar menos registros"
+                : "Mostrar todos los registros"
+            }
+          >
+            {showAllRecordsCurrentLeads ? <FaChevronDown /> : <FaChevronUp />}
+          </button>
+        </div>
       </div>
 
       {currentPageLeads.length > 0 ? (
@@ -173,7 +157,7 @@ const CurrentLeadsTable = ({
                 <td className="py-2 px-4">
                   <button
                     onClick={() => handleRemoveLead(rel.id)}
-                    className="border-2 border-red-500 text-red-500 px-3 py-1 rounded hover:bg-red-500 hover:text-white transition duration-200"
+                    className="border-2 border-red-500 text-red-500 px-3 py-1 rounded hover:bg-red-500 hover:text-white transition duration-200 cursor-pointer"
                     title="Finalizar relación con este lead"
                   >
                     <FaTrashAlt />
