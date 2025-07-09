@@ -7,8 +7,10 @@ import UtcClock from "../../components/UtcClock";
 const Accounts = () => {
   const [accounts, setAccounts] = useState([]);
   const [searchTerm, setSearchTerm] = useState(''); // Estado para el término de búsqueda
-  const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' }); // Configuración de orden
-  const [showOptions, setShowOptions] = useState(5); // Número de registros a mostrar
+  const [orderBy, setOrderBy] = useState('asc'); // Para controlar el orden (ascendente o descendente)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage] = useState(5); // Filas por página
+  const [showAllRecords, setShowAllRecords] = useState(false); // Estado para mostrar todos los registros
   const [showColumns, setShowColumns] = useState({
     id: true,
     name: true,
@@ -16,10 +18,6 @@ const Accounts = () => {
     website: true,
   }); // Estado para las columnas a mostrar
   const [showDropdown, setShowDropdown] = useState(false); // Para mostrar/ocultar el dropdown de columnas
-  const [orderBy, setOrderBy] = useState('asc'); // Para controlar el orden (ascendente o descendente)
-  const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage] = useState(5); // Filas por página
-  const [showAllRecords, setShowAllRecords] = useState(false); // Estado para mostrar todos los registros
   const navigate = useNavigate();
 
   const fetchAccounts = () => {
@@ -37,25 +35,26 @@ const Accounts = () => {
   }, []);
 
   // Función para manejar el orden
-  const handleSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
+  const handleDateOrder = () => {
+    // Cambia el estado de orden cuando el usuario haga clic en el botón
+    setOrderBy(prevOrder => (prevOrder === 'asc' ? 'desc' : 'asc'));
   };
 
-  // Función para ordenar los registros por fecha
-  const handleDateOrder = (order) => {
-    setOrderBy(order); // 'asc' o 'desc'
-  };
-
-  // Ordenar las cuentas según el orden seleccionado (nombre o fecha)
+  // Ordenar las cuentas según el orden seleccionado (por fecha)
   const sortedAccounts = [...accounts].sort((a, b) => {
+    // Asegurarse de que `createdAt` sea una fecha válida antes de compararla
+    const dateA = new Date(a.createdAt);
+    const dateB = new Date(b.createdAt);
+
+    // Verificar si las fechas son válidas
+    if (isNaN(dateA) || isNaN(dateB)) {
+      return 0; // Si no es una fecha válida, no se ordena
+    }
+
     if (orderBy === 'asc') {
-      return new Date(a.createdAt) - new Date(b.createdAt); // Más antiguos
+      return dateA - dateB; // Más antiguos primero
     } else {
-      return new Date(b.createdAt) - new Date(a.createdAt); // Más recientes
+      return dateB - dateA; // Más recientes primero
     }
   });
 
@@ -182,7 +181,7 @@ const Accounts = () => {
       <div className="flex justify-between items-center mb-4">
         <div className="flex gap-2">
           <button
-            onClick={() => handleDateOrder(orderBy === 'asc' ? 'desc' : 'asc')}
+            onClick={handleDateOrder}
             className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
             title="Ordenar por más recientes/más antiguos"
           >
@@ -215,10 +214,10 @@ const Accounts = () => {
       <table className="min-w-full bg-white shadow rounded-lg overflow-hidden">
         <thead className="bg-blue-900 text-white">
           <tr>
-            {showColumns.id && <th className="py-2 px-4 text-left cursor-pointer" onClick={() => handleSort('id')}>ID</th>}
-            {showColumns.name && <th className="py-2 px-4 text-left cursor-pointer" onClick={() => handleSort('name')}>Nombre</th>}
-            {showColumns.website && <th className="py-2 px-4 text-left cursor-pointer" onClick={() => handleSort('website')}>Sitio Web</th>}
-            {showColumns.phone && <th className="py-2 px-4 text-left cursor-pointer" onClick={() => handleSort('phone')}>Teléfono</th>}
+            {showColumns.id && <th className="py-2 px-4 text-left cursor-pointer">ID</th>}
+            {showColumns.name && <th className="py-2 px-4 text-left cursor-pointer">Nombre</th>}
+            {showColumns.website && <th className="py-2 px-4 text-left cursor-pointer">Sitio Web</th>}
+            {showColumns.phone && <th className="py-2 px-4 text-left cursor-pointer">Teléfono</th>}
             <th className="py-2 px-4 text-left">Acciones</th>
           </tr>
         </thead>

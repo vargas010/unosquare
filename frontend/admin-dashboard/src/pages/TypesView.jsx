@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api/axiosConfig';
 import EditTypeModal from "./EditTypeModal";
-import { FaChevronLeft, FaChevronRight, FaChevronUp, FaChevronDown } from 'react-icons/fa';
+import { FaPlus, FaEye, FaRegEdit, FaTrashAlt, FaChevronLeft, FaChevronRight, FaRedoAlt, FaUndoAlt, FaCaretDown, FaChevronUp, FaChevronDown } from 'react-icons/fa'; 
+import UtcClock from "../components/UtcClock"; // Para la hora
 
 const TypesView = () => {
   const [types, setTypes] = useState([]);
@@ -12,16 +13,17 @@ const TypesView = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editType, setEditType] = useState(null);
   const [page, setPage] = useState(1);
-  const [perPage] = useState(5);  // Cambia el número de registros por página según necesites
+  const [perPage, setPerPage] = useState(10); // Por defecto, 10 registros por página
+  const [showAll, setShowAll] = useState(false); // Para alternar entre mostrar todos o solo 10
+  const [sortOrder, setSortOrder] = useState("asc"); // Para ordenar por fecha: ascendente o descendente
 
   useEffect(() => {
     fetchTypes();
     fetchAccounts();
-  }, [page]);
+  }, [page, perPage, sortOrder]);
 
   const fetchTypes = async () => {
     const res = await api.get('/types');
-    console.log(res.data.items);
     setTypes(res.data.items || []);
   };
 
@@ -74,16 +76,49 @@ const TypesView = () => {
     setShowEditModal(true);
   };
 
+  // Ordenar por fecha (más recientes o más antiguos)
+  const handleSortOrder = () => {
+    setSortOrder(prev => (prev === "asc" ? "desc" : "asc"));
+  };
+
   // Paginación
   const filteredTypes = types.filter(type =>
     type.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  
+
+  const sortedTypes = filteredTypes.sort((a, b) => {
+    const dateA = new Date(a.created); // Usar 'created' en lugar de 'created_at'
+    const dateB = new Date(b.created); // Usar 'created' en lugar de 'created_at'
+
+    // Verifica que las fechas sean válidas
+    if (isNaN(dateA) || isNaN(dateB)) {
+      console.warn("Fecha no válida", a, b);
+      return 0; // Si alguna fecha no es válida, no las ordenes
+    }
+
+    return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+  });
+
   const totalPages = Math.ceil(filteredTypes.length / perPage);
-  const currentTypes = filteredTypes.slice((page - 1) * perPage, page * perPage);
+  const currentTypes = showAll ? sortedTypes : sortedTypes.slice((page - 1) * perPage, page * perPage);
+
+  const toggleShowAll = () => {
+    setShowAll(prev => !prev);
+    setPage(1); // Reseteamos la página cuando se cambia entre mostrar todo o 10
+  };
 
   return (
     <div className="p-6 relative">
+      {/* Título de la sección */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Tipos de Cuenta</h1>
+      </div>
+
+      {/* Hora UTC debajo del título */}
+      <div className="mb-6">
+        <UtcClock />
+      </div>
+
       {/* Filtro de búsqueda */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
         <input
@@ -95,14 +130,35 @@ const TypesView = () => {
         />
         <button
           onClick={() => setShowModal(true)}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+          className="border-2 border-green-600 text-green-600 px-4 py-2 rounded hover:bg-green-600 hover:text-white transition duration-200 flex items-center"
         >
-          + Agregar Tipo
+          <FaPlus className="mr-2" />
+          Add type
         </button>
       </div>
 
-      {/* Paginación */}
+      {/* Ordenar por más recientes/más antiguos */}
       <div className="flex justify-start gap-2 mb-4">
+        <button
+          onClick={handleSortOrder}
+          className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transform transition-transform duration-300"
+          title="Ordenar por más recientes/más antiguos"
+        >
+          <svg
+            stroke="currentColor"
+            fill="currentColor"
+            strokeWidth="0"
+            viewBox="0 0 512 512"
+            height="1em"
+            width="1em"
+            xmlns="http://www.w3.org/2000/svg"
+            className={`${sortOrder === 'desc' ? 'rotate-180' : ''}`} // Aplica la rotación si el orden es descendente
+          >
+            <path d="M255.545 8c-66.269.119-126.438 26.233-170.86 68.685L48.971 40.971C33.851 25.851 8 36.559 8 57.941V192c0 13.255 10.745 24 24 24h134.059c21.382 0 32.09-25.851 16.971-40.971l-41.75-41.75c30.864-28.899 70.801-44.907 113.23-45.273 92.398-.798 170.283 73.977 169.484 169.442C423.236 348.009 349.816 424 256 424c-41.127 0-79.997-14.678-110.63-41.556-4.743-4.161-11.906-3.908-16.368.553L89.34 422.659c-4.872 4.872-4.631 12.815.482 17.433C133.798 479.813 192.074 504 256 504c136.966 0 247.999-111.033 248-247.998C504.001 119.193 392.354 7.755 255.545 8z"></path>
+          </svg>
+        </button>
+
+        {/* Paginación */}
         <button
           onClick={() => setPage(prev => Math.max(prev - 1, 1))}
           className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -117,12 +173,14 @@ const TypesView = () => {
         >
           <FaChevronRight />
         </button>
+
+        {/* Botón de "Mostrar todo / Mostrar 10" */}
         <button
-          onClick={() => setPage(totalPages)}
+          onClick={toggleShowAll}
           className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-          title="Ir a última página"
+          title="Mostrar todo / Mostrar solo 10"
         >
-          <FaChevronDown />
+          {showAll ? <FaChevronUp /> : <FaChevronDown />}
         </button>
       </div>
 
@@ -144,17 +202,20 @@ const TypesView = () => {
                 <td className="py-2 px-4">{type.description || '—'}</td>
                 <td className="py-2 px-4">{getCountByType(type.id)}</td>
                 <td className="py-2 px-4 space-x-2">
+                  {/* Botón Editar */}
                   <button
                     onClick={() => openEditModal(type)}
-                    className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 text-sm"
+                    className="border-2 border-yellow-500 text-yellow-500 px-3 py-1 rounded hover:bg-yellow-500 hover:text-white transition duration-200"
                   >
-                    Editar
+                    <FaRegEdit />
                   </button>
+
+                  {/* Botón Eliminar */}
                   <button
                     onClick={() => handleDelete(type.id)}
-                    className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
+                    className="border-2 border-red-500 text-red-500 px-3 py-1 rounded hover:bg-red-500 hover:text-white transition duration-200"
                   >
-                    Eliminar
+                    <FaTrashAlt />
                   </button>
                 </td>
               </tr>

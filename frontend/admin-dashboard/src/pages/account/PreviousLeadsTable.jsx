@@ -1,5 +1,4 @@
-// src/components/account/PreviousLeadsTable.jsx
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaChevronLeft,
   FaChevronRight,
@@ -14,31 +13,81 @@ const PreviousLeadsTable = ({
   previousLeads,
   orderByPreviousLeads,
   setOrderByPreviousLeads,
-  prevPagePreviousLeads,
-  nextPagePreviousLeads,
   toggleShowAllPreviousLeads,
   showAllRecordsPreviousLeads,
-  displayedPreviousLeads,
   searchTerm,
   setSearchTerm,
   handleRestoreLead,
 }) => {
+  const [currentPage, setCurrentPage] = useState(1); // Página actual
+  const leadsPerPage = 5;
+  const [searchTermLocal, setSearchTermLocal] = useState(""); // Búsqueda local solo para esta tabla
+
+  // Filtra los leads con base en el término de búsqueda de manera segura
+  const filteredLeads = searchTermLocal
+    ? previousLeads.filter((lead) => {
+        const leadName = lead.name ? lead.name.toLowerCase() : "";
+        const leadEmail = lead.email ? lead.email.toLowerCase() : "";
+        return (
+          leadName.includes(searchTermLocal.toLowerCase()) ||
+          leadEmail.includes(searchTermLocal.toLowerCase())
+        );
+      })
+    : previousLeads; // Si no hay término de búsqueda, muestra todos los registros
+
+  // Ordena los leads con base en la fecha
+  const sortedLeads = filteredLeads.sort((a, b) => {
+    const dateA = new Date(a.start_date);
+    const dateB = new Date(b.start_date);
+
+    if (isNaN(dateA) || isNaN(dateB)) return 0; // Si alguna de las fechas no es válida, no las ordenes
+
+    return orderByPreviousLeads === "asc" ? dateA - dateB : dateB - dateA;
+  });
+
+  // Lógica de paginación: Calcula los registros que se deben mostrar
+  const startIndex = (currentPage - 1) * leadsPerPage;
+  const displayedLeads = showAllRecordsPreviousLeads
+    ? sortedLeads
+    : sortedLeads.slice(startIndex, startIndex + leadsPerPage);
+
+  // Manejo de la siguiente página
+  const nextPage = () => {
+    if (currentPage < Math.ceil(filteredLeads.length / leadsPerPage)) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // Manejo de la página anterior
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchTermLocal(e.target.value); // Cambia el estado de búsqueda solo para esta tabla
+    setCurrentPage(1); // Reinicia la página a la 1 cuando se realiza una búsqueda
+  };
+
   return (
     <div className="bg-white shadow rounded-lg p-6 mt-6">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">
         Historial de Leads en esta Cuenta
       </h2>
 
+      {/* Campo de búsqueda */}
       <div className="mb-4 w-full max-w-xs">
         <input
           type="text"
           placeholder="Buscar Lead..."
           className="border-2 border-gray-300 px-3 py-2 rounded w-full focus:outline-none focus:border-blue-500 transition duration-200"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          value={searchTermLocal}
+          onChange={handleSearchChange} // Actualiza el estado de búsqueda solo para esta tabla
         />
       </div>
 
+      {/* Botones de ordenación, paginación y "Mostrar todo" */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex gap-2">
           <button
@@ -51,14 +100,14 @@ const PreviousLeadsTable = ({
             {orderByPreviousLeads === "asc" ? <FaRedoAlt /> : <FaUndoAlt />}
           </button>
           <button
-            onClick={prevPagePreviousLeads}
+            onClick={prevPage}
             className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
             title="Página anterior"
           >
             <FaChevronLeft />
           </button>
           <button
-            onClick={nextPagePreviousLeads}
+            onClick={nextPage}
             className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
             title="Página siguiente"
           >
@@ -78,7 +127,8 @@ const PreviousLeadsTable = ({
         </div>
       </div>
 
-      {displayedPreviousLeads.length > 0 ? (
+      {/* Tabla de historial de leads */}
+      {filteredLeads.length > 0 ? (
         <table className="min-w-full table-auto">
           <thead className="bg-blue-900 text-white">
             <tr>
@@ -90,7 +140,7 @@ const PreviousLeadsTable = ({
             </tr>
           </thead>
           <tbody>
-            {displayedPreviousLeads.map((rel) => {
+            {displayedLeads.map((rel) => {
               const lead = leads.find((l) => l.id === rel.lead_id);
               return (
                 <tr key={rel.id} className="border-b">
@@ -116,7 +166,7 @@ const PreviousLeadsTable = ({
           </tbody>
         </table>
       ) : (
-        <p className="text-gray-600">No hay historial de leads anteriores.</p>
+        <p className="text-gray-600">No se encontraron registros con ese término de búsqueda.</p>
       )}
     </div>
   );
