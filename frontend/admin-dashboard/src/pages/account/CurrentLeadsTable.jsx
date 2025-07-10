@@ -1,175 +1,181 @@
-import React, { useState, useEffect } from "react";
-import {
-  FaTrashAlt,
-  FaChevronLeft,
-  FaChevronRight,
+import React, { useState, useEffect, useMemo } from "react";
+import { 
+  FaTrashAlt, 
+  FaChevronLeft, 
+  FaChevronRight, 
+  FaSortAmountUp, 
+  FaSortAmountDown,
   FaChevronUp,
-  FaChevronDown,
-  FaRedoAlt,
-  FaUndoAlt,
+  FaChevronDown
 } from "react-icons/fa";
 
 const CurrentLeadsTable = ({
-  displayedCurrentLeads,
-  setShowModal,
-  handleRemoveLead,
+  currentLeads,
+  searchTerm,
+  setSearchTerm,
+  orderByCurrentLeads,
+  handleSortCurrentLeads,
+  prevPageCurrentLeads,
+  nextPageCurrentLeads,
   toggleShowAllCurrentLeads,
   showAllRecordsCurrentLeads,
+  displayedCurrentLeads,
+  handleRemoveLead,
+  setShowModal,
 }) => {
-  const [sortOrder, setSortOrder] = useState("asc"); // Estado para el orden
-  const [currentPage, setCurrentPage] = useState(1); // Página actual
-  const leadsPerPage = 5; // Siempre mostramos 5 registros por página
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const leadsPerPage = 5;
+
+  const processedLeads = useMemo(() => {
+    const sorted = [...currentLeads].sort((a, b) => {
+      const dateA = new Date(a.start_date);
+      const dateB = new Date(b.start_date);
+      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+    });
+
+    return sorted.filter(rel => {
+      const name = `${rel.lead?.name || ""} ${rel.lead?.last_name || ""}`.toLowerCase();
+      const email = `${rel.lead?.work_email || ""} ${rel.lead?.personal_email || ""}`.toLowerCase();
+      const query = searchTerm.toLowerCase();
+      return query ? name.includes(query) || email.includes(query) : true;
+    });
+  }, [currentLeads, searchTerm, sortOrder]);
+
+  const totalPages = Math.max(Math.ceil(processedLeads.length / leadsPerPage), 1);
+  const currentLeadsToShow = showAllRecordsCurrentLeads
+    ? processedLeads
+    : processedLeads.slice((currentPage - 1) * leadsPerPage, currentPage * leadsPerPage);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   useEffect(() => {
-    console.log("Datos cargados:", displayedCurrentLeads);
-  }, [displayedCurrentLeads]);
-
-  const handleSearchChange = (e) => {
-    // Aquí iría la lógica de búsqueda si es necesario
-  };
-
-  const handleSortOrder = () => {
-    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
-    setCurrentPage(1); // Resetear a la primera página cuando se ordena
-  };
-
-  // Ordenamos todos los registros por fecha
-  const sortedLeads = displayedCurrentLeads.sort((a, b) => {
-    const dateA = new Date(a.start_date);
-    const dateB = new Date(b.start_date);
-
-    if (isNaN(dateA) || isNaN(dateB)) return 0; // Si alguna de las fechas no es válida, no las ordenamos
-
-    return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
-  });
-
-  // Paginación: calculamos la cantidad de páginas necesarias
-  const totalPages = Math.ceil(sortedLeads.length / leadsPerPage); // Total de páginas
-  const currentPageLeads = showAllRecordsCurrentLeads
-    ? sortedLeads // Muestra todos los registros si "Mostrar Todo" está activado
-    : sortedLeads.slice((currentPage - 1) * leadsPerPage, currentPage * leadsPerPage); // Solo muestra 5 si la paginación está activa
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-  };
-
-  const handlePrevPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
-  };
-
-  const toggleShowAll = () => {
-    toggleShowAllCurrentLeads(!showAllRecordsCurrentLeads); // Alternar entre mostrar todo o 5 registros
-    setCurrentPage(1); // Resetea la página a la 1 cuando cambias la cantidad de registros
-  };
+    setCurrentPage(1);
+  }, [searchTerm, sortOrder, showAllRecordsCurrentLeads]);
 
   return (
-    <div className="bg-white shadow rounded-lg p-6 mt-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">
-        Leads Actuales en esta Cuenta
-      </h2>
-
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-        <input
-          type="text"
-          placeholder="Buscar Lead..."
-          value=""
-          onChange={handleSearchChange}
-          className="border-2 border-gray-300 px-3 py-2 rounded w-full max-w-xs focus:outline-none focus:border-blue-500 transition"
-        />
-
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-        >
-          + Crear Lead
-        </button>
-      </div>
-
-      {/* Botones de ordenación, paginación y "Mostrar todo" */}
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex gap-2">
+    <div className="bg-white shadow rounded-lg p-6">
+      <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
+        <h2 className="text-xl font-semibold text-gray-800">Leads Activos</h2>
+        
+        <div className="flex flex-wrap gap-3">
+          <input
+            type="text"
+            placeholder="Buscar leads..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-100"
+          />
+          
           <button
-            onClick={handleSortOrder}
-            className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer"
-            title="Ordenar por más recientes/más antiguos"
+            onClick={() => setShowModal(true)}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
           >
-            {sortOrder === "asc" ? <FaRedoAlt /> : <FaUndoAlt />}
-          </button>
-
-          {/* Solo mostramos botones de paginación si no estamos mostrando todos los registros */}
-          {!showAllRecordsCurrentLeads && (
-            <>
-              <button
-                onClick={handlePrevPage}
-                className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer"
-                title="Página anterior"
-                disabled={currentPage === 1} // Deshabilitar si estamos en la primera página
-              >
-                <FaChevronLeft />
-              </button>
-              <button
-                onClick={handleNextPage}
-                className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer"
-                title="Página siguiente"
-                disabled={currentPage === totalPages} // Deshabilitar si estamos en la última página
-              >
-                <FaChevronRight />
-              </button>
-            </>
-          )}
-
-          <button
-            onClick={toggleShowAll}
-            className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer"
-            title={
-              showAllRecordsCurrentLeads
-                ? "Mostrar menos registros"
-                : "Mostrar todos los registros"
-            }
-          >
-            {showAllRecordsCurrentLeads ? <FaChevronDown /> : <FaChevronUp />}
+            + Nuevo Lead
           </button>
         </div>
       </div>
 
-      {currentPageLeads.length > 0 ? (
-        <table className="min-w-full table-auto">
-          <thead className="bg-blue-900 text-white">
+      <div className="mb-4 flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => handleSortCurrentLeads()}
+            className="flex items-center gap-1 px-3 py-1 text-gray-700 hover:text-blue-600 rounded-md hover:bg-gray-100 bg-blue-100"
+            title={`Orden: ${sortOrder === 'desc' ? 'Más nuevos primero' : 'Más antiguos primero'}`}
+          >
+            {sortOrder === 'desc' ? <FaSortAmountDown /> : <FaSortAmountUp />}
+            <span className="text-sm">Ordenar</span>
+          </button>
+          
+          <span className="text-sm text-gray-600">
+            Mostrando {currentLeadsToShow.length} de {processedLeads.length}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {!showAllRecordsCurrentLeads && totalPages > 1 && (
+            <div className="flex items-center gap-1 bg-blue-100 px-3 py-1 rounded-md">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="p-1 text-gray-700 hover:text-blue-600 disabled:opacity-40"
+                title="Página anterior"
+              >
+                <FaChevronLeft />
+              </button>
+              
+              <span className="text-sm">
+                {currentPage}/{totalPages}
+              </span>
+              
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="p-1 text-gray-700 hover:text-blue-600 disabled:opacity-40" 
+                title="Página siguiente"
+              >
+                <FaChevronRight />
+              </button>
+            </div>
+          )}
+
+          <button
+            onClick={() => toggleShowAllCurrentLeads(!showAllRecordsCurrentLeads)}
+            className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors"
+          >
+            {showAllRecordsCurrentLeads ? (
+              <>
+                <FaChevronDown /> Contraer
+              </>
+            ) : (
+              <>
+                <FaChevronUp /> Expandir
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full">
+          <thead className="bg-blue-50">
             <tr>
-              <th className="py-2 px-4 text-left">Nombre</th>
-              <th className="py-2 px-4 text-left">Correo</th>
-              <th className="py-2 px-4 text-left">Inicio</th>
-              <th className="py-2 px-4 text-left">Acciones</th>
+              <th className="px-4 py-3 text-left">Nombre</th>
+              <th className="px-4 py-3 text-left">Email</th>
+              <th className="px-4 py-3 text-left">Fecha Inicio</th>
+              <th className="px-4 py-3 text-left">Acciones</th>
             </tr>
           </thead>
-          <tbody>
-            {currentPageLeads.map((rel) => (
-              <tr key={rel.id} className="border-b">
-                <td className="py-2 px-4">
-                  {rel.lead?.name} {rel.lead?.last_name}
-                </td>
-                <td className="py-2 px-4">
-                  {rel.lead?.work_email || rel.lead?.personal_email || "—"}
-                </td>
-                <td className="py-2 px-4">
-                  {new Date(rel.start_date).toLocaleDateString()}
-                </td>
-                <td className="py-2 px-4">
+          <tbody className="divide-y">
+            {currentLeadsToShow.length > 0 ? currentLeadsToShow.map(rel => (
+              <tr key={rel.id} className="hover:bg-gray-50">
+                <td className="px-4 py-3">{rel.lead?.name} {rel.lead?.last_name}</td>
+                <td className="px-4 py-3">{rel.lead?.work_email || rel.lead?.personal_email || '-'}</td>
+                <td className="px-4 py-3">{new Date(rel.start_date).toLocaleDateString()}</td>
+                <td className="px-4 py-3">
                   <button
                     onClick={() => handleRemoveLead(rel.id)}
-                    className="border-2 border-red-500 text-red-500 px-3 py-1 rounded hover:bg-red-500 hover:text-white transition duration-200 cursor-pointer"
-                    title="Finalizar relación con este lead"
+                    className="p-2 text-red-500 hover:text-red-700 rounded-full hover:bg-red-50 transition-colors"
+                    title="Remover lead"
                   >
                     <FaTrashAlt />
                   </button>
                 </td>
               </tr>
-            ))}
+            )) : (
+              <tr>
+                <td colSpan="4" className="px-4 py-6 text-center text-gray-500">
+                  No se encontraron resultados
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
-      ) : (
-        <p className="text-gray-600">No hay leads actuales para mostrar.</p>
-      )}
+      </div>
     </div>
   );
 };

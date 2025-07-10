@@ -15,19 +15,23 @@ def get_accounts():
 @accounts_bp.route('/accounts', methods=['POST'])
 def create_account():
     try:
+        # Recibe los datos enviados en la solicitud
         data = request.get_json()
         payload = {
             "name": data.get("name"),
             "website": data.get("website"),
             "address": data.get("address"),
             "phone": data.get("phone"),
-            "tax_id": data.get("tax_id")
+            "tax_id": data.get("tax_id"),
+            "type_id": data.get("industry_type")  # Aquí estamos agregando el tipo de industria (type_id)
         }
+        # Realiza la solicitud POST para crear la cuenta con el tipo de industria
         response = requests.post("http://127.0.0.1:8090/api/collections/accounts/records", json=payload)
-        response.raise_for_status()
-        return jsonify(response.json()), 201
+        response.raise_for_status()  # Verifica si la solicitud fue exitosa
+        return jsonify(response.json()), 201  # Devuelve la respuesta de la creación de la cuenta
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @accounts_bp.route('/accounts/<string:account_id>', methods=['GET'])
 def get_account_by_id(account_id):

@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from "react";
-import {
-  FaChevronLeft,
-  FaChevronRight,
-  FaRedoAlt,
+import React, { useState, useMemo } from "react";
+import { 
+  FaChevronLeft, 
+  FaChevronRight, 
+  FaRedoAlt, 
   FaUndoAlt,
   FaChevronUp,
   FaChevronDown,
+  FaSortAmountUp,
+  FaSortAmountDown
 } from "react-icons/fa";
 
 const PreviousLeadsTable = ({
@@ -17,18 +19,28 @@ const PreviousLeadsTable = ({
   showAllRecordsPreviousLeads,
   handleRestoreLead,
 }) => {
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1); // Página actual
   const leadsPerPage = 5;
 
   // Ordena los leads con base en la fecha
-  const sortedLeads = previousLeads.sort((a, b) => {
-    const dateA = new Date(a.start_date);
-    const dateB = new Date(b.start_date);
+  const sortedLeads = useMemo(() => {
+    const sorted = [...previousLeads].sort((a, b) => {
+      const dateA = new Date(a.start_date);
+      const dateB = new Date(b.start_date);
 
-    if (isNaN(dateA) || isNaN(dateB)) return 0; // Si alguna de las fechas no es válida, no las ordenes
+      if (isNaN(dateA) || isNaN(dateB)) return 0; // Si alguna de las fechas no es válida, no las ordenes
 
-    return orderByPreviousLeads === "asc" ? dateA - dateB : dateB - dateA;
-  });
+      return orderByPreviousLeads === "asc" ? dateA - dateB : dateB - dateA;
+    });
+
+    return sorted.filter(rel => {
+      const name = `${leads.find(l => l.id === rel.lead_id)?.name || ""} ${leads.find(l => l.id === rel.lead_id)?.last_name || ""}`.toLowerCase();
+      const email = `${leads.find(l => l.id === rel.lead_id)?.work_email || ""} ${leads.find(l => l.id === rel.lead_id)?.personal_email || ""}`.toLowerCase();
+      const query = searchTerm.toLowerCase();
+      return query ? name.includes(query) || email.includes(query) : true;
+    });
+  }, [previousLeads, orderByPreviousLeads, searchTerm, leads]);
 
   // Lógica de paginación: Calcula los registros que se deben mostrar
   const startIndex = (currentPage - 1) * leadsPerPage;
@@ -56,38 +68,71 @@ const PreviousLeadsTable = ({
         Historial de Leads en esta Cuenta
       </h2>
 
-      {/* Botones de ordenación, paginación y "Mostrar todo" */}
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex gap-2">
+      {/* Buscar y ordenar */}
+      <div className="flex justify-between items-center mb-4 gap-4">
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            placeholder="Buscar leads..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-100"
+          />
+          {/* Ordenar */}
           <button
             onClick={() =>
               setOrderByPreviousLeads(orderByPreviousLeads === "asc" ? "desc" : "asc")
             }
-            className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-            title="Ordenar por más recientes/más antiguos"
+            className="flex items-center gap-1 px-3 py-1 text-gray-700 hover:text-blue-600 rounded-md hover:bg-gray-100 bg-blue-100"
+            title={`Ordenar por más recientes/más antiguos`}
           >
-            {orderByPreviousLeads === "asc" ? <FaRedoAlt /> : <FaUndoAlt />}
+            {orderByPreviousLeads === "asc" ? <FaSortAmountDown /> : <FaSortAmountUp />}
+            <span className="text-sm">Ordenar</span>
           </button>
-          <button
-            onClick={prevPage}
-            className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-            title="Página anterior"
-          >
-            <FaChevronLeft />
-          </button>
-          <button
-            onClick={nextPage}
-            className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-            title="Página siguiente"
-          >
-            <FaChevronRight />
-          </button>
+        </div>
+
+        {/* Paginación */}
+        <div className="flex items-center gap-3">
+          {!showAllRecordsPreviousLeads && previousLeads.length > leadsPerPage && (
+            <div className="flex items-center gap-1 bg-blue-100 px-3 py-1 rounded-md">
+              <button
+                onClick={prevPage}
+                disabled={currentPage === 1}
+                className="p-1 text-gray-700 hover:text-blue-600 disabled:opacity-40"
+                title="Página anterior"
+              >
+                <FaChevronLeft />
+              </button>
+
+              <span className="text-sm">
+                {currentPage}/{Math.ceil(previousLeads.length / leadsPerPage)}
+              </span>
+
+              <button
+                onClick={nextPage}
+                disabled={currentPage === Math.ceil(previousLeads.length / leadsPerPage)}
+                className="p-1 text-gray-700 hover:text-blue-600 disabled:opacity-40"
+                title="Página siguiente"
+              >
+                <FaChevronRight />
+              </button>
+            </div>
+          )}
+
+          {/* Botón de "Mostrar Todo" */}
           <button
             onClick={toggleShowAllPreviousLeads}
-            className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-            title={showAllRecordsPreviousLeads ? "Mostrar menos registros" : "Mostrar todos los registros"}
+            className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors"
           >
-            {showAllRecordsPreviousLeads ? <FaChevronDown /> : <FaChevronUp />}
+            {showAllRecordsPreviousLeads ? (
+              <>
+                <FaChevronDown /> Contraer
+              </>
+            ) : (
+              <>
+                <FaChevronUp /> Expandir
+              </>
+            )}
           </button>
         </div>
       </div>
