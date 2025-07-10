@@ -100,16 +100,16 @@ const AccountForm = () => {
 
       <form onSubmit={handleSubmit} className="bg-white p-6 shadow rounded-lg space-y-4">
         <div className="grid grid-cols-2 gap-4">
-          <input type="text" name="name" value={form.name} onChange={handleChange} placeholder="Nombre" className="p-2 border rounded" required />
-          <input type="text" name="website" value={form.website} onChange={handleChange} placeholder="Sitio web" className="p-2 border rounded" />
-          <input type="text" name="address" value={form.address} onChange={handleChange} placeholder="Dirección" className="p-2 border rounded" />
-          <input type="text" name="phone" value={form.phone} onChange={handleChange} placeholder="Teléfono" className="p-2 border rounded" />
+          <input type="text" name="name" value={form.name} onChange={handleChange} placeholder="Name" className="p-2 border rounded" required />
+          <input type="text" name="website" value={form.website} onChange={handleChange} placeholder="website" className="p-2 border rounded" />
+          <input type="text" name="address" value={form.address} onChange={handleChange} placeholder="Addres" className="p-2 border rounded" />
+          <input type="text" name="phone" value={form.phone} onChange={handleChange} placeholder="Telphon" className="p-2 border rounded" />
           <input type="text" name="tax_id" value={form.tax_id} onChange={handleChange} placeholder="NIT" className="p-2 border rounded" />
         </div>
 
         {/* Campo para seleccionar el tipo de industria */}
         <div className="grid grid-cols-2 gap-4">
-          <label className="p-2">Tipo de Industria</label>
+          <label className="p-2">Type Account</label>
           <select
             name="industry_type"
             value={form.industry_type}
@@ -117,7 +117,7 @@ const AccountForm = () => {
             className="p-2 border rounded"
             required
           >
-            <option value="">Selecciona un tipo de industria</option>
+            <option value="">Selection type Account</option>
             {industries.map((industry) => (
               <option key={industry.id} value={industry.id}>
                 {industry.name}
@@ -131,7 +131,7 @@ const AccountForm = () => {
             onClick={() => setShowModal(true)}
             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
           >
-            Crear Nuevo Tipo
+            Create new Type
           </button>
         </div>
 
@@ -149,7 +149,7 @@ const AccountForm = () => {
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white w-full max-w-md p-6 rounded-lg shadow-lg">
-            <h2 className="text-xl font-semibold mb-4">Nuevo Tipo de Industria</h2>
+            <h2 className="text-xl font-semibold mb-4">Nuevo Tipo de Cuenta</h2>
             <input
               type="text"
               value={newIndustryName}
