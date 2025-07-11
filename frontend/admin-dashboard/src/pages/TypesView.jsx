@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api/axiosConfig';
 import EditTypeModal from "./EditTypeModal";
-import { FaPlus, FaEye, FaRegEdit, FaTrashAlt, FaChevronLeft, FaChevronRight, FaRedoAlt, FaUndoAlt, FaCaretDown, FaChevronUp, FaChevronDown } from 'react-icons/fa'; 
+import { FaPlus, FaEye, FaRegEdit, FaTrashAlt, FaChevronLeft, FaChevronRight, FaChevronUp, FaChevronDown } from 'react-icons/fa'; 
 import UtcClock from "../components/UtcClock"; // Para la hora
+import { useNavigate } from 'react-router-dom'; // Importamos useNavigate para la navegación
 
 const TypesView = () => {
   const [types, setTypes] = useState([]);
@@ -13,9 +14,10 @@ const TypesView = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editType, setEditType] = useState(null);
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(10); // Por defecto, 10 registros por página
-  const [showAll, setShowAll] = useState(false); // Para alternar entre mostrar todos o solo 10
-  const [sortOrder, setSortOrder] = useState("asc"); // Para ordenar por fecha: ascendente o descendente
+  const [perPage, setPerPage] = useState(10); 
+  const [showAll, setShowAll] = useState(false); 
+  const [sortOrder, setSortOrder] = useState("asc"); 
+  const navigate = useNavigate(); // Función para la navegación
 
   useEffect(() => {
     fetchTypes();
@@ -76,24 +78,25 @@ const TypesView = () => {
     setShowEditModal(true);
   };
 
-  // Ordenar por fecha (más recientes o más antiguos)
+  const handleViewData = (typeId) => {
+    navigate(`/accounts/${typeId}`); // Redirige a la nueva vista con el typeId
+  };
+
   const handleSortOrder = () => {
     setSortOrder(prev => (prev === "asc" ? "desc" : "asc"));
   };
 
-  // Paginación
   const filteredTypes = types.filter(type =>
     type.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const sortedTypes = filteredTypes.sort((a, b) => {
-    const dateA = new Date(a.created); // Usar 'created' en lugar de 'created_at'
-    const dateB = new Date(b.created); // Usar 'created' en lugar de 'created_at'
+    const dateA = new Date(a.created); 
+    const dateB = new Date(b.created); 
 
-    // Verifica que las fechas sean válidas
     if (isNaN(dateA) || isNaN(dateB)) {
       console.warn("Fecha no válida", a, b);
-      return 0; // Si alguna fecha no es válida, no las ordenes
+      return 0; 
     }
 
     return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
@@ -104,22 +107,19 @@ const TypesView = () => {
 
   const toggleShowAll = () => {
     setShowAll(prev => !prev);
-    setPage(1); // Reseteamos la página cuando se cambia entre mostrar todo o 10
+    setPage(1);
   };
 
   return (
     <div className="p-6 relative">
-      {/* Título de la sección */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Tipos de Cuenta</h1>
       </div>
 
-      {/* Hora UTC debajo del título */}
       <div className="mb-6">
         <UtcClock />
       </div>
 
-      {/* Filtro de búsqueda */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
         <input
           type="text"
@@ -137,12 +137,10 @@ const TypesView = () => {
         </button>
       </div>
 
-      {/* Ordenar por más recientes/más antiguos */}
       <div className="flex justify-start gap-2 mb-4">
         <button
           onClick={handleSortOrder}
           className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transform transition-transform duration-300"
-          title="Ordenar por más recientes/más antiguos"
         >
           <svg
             stroke="currentColor"
@@ -152,39 +150,33 @@ const TypesView = () => {
             height="1em"
             width="1em"
             xmlns="http://www.w3.org/2000/svg"
-            className={`${sortOrder === 'desc' ? 'rotate-180' : ''}`} // Aplica la rotación si el orden es descendente
+            className={`${sortOrder === 'desc' ? 'rotate-180' : ''}`}
           >
             <path d="M255.545 8c-66.269.119-126.438 26.233-170.86 68.685L48.971 40.971C33.851 25.851 8 36.559 8 57.941V192c0 13.255 10.745 24 24 24h134.059c21.382 0 32.09-25.851 16.971-40.971l-41.75-41.75c30.864-28.899 70.801-44.907 113.23-45.273 92.398-.798 170.283 73.977 169.484 169.442C423.236 348.009 349.816 424 256 424c-41.127 0-79.997-14.678-110.63-41.556-4.743-4.161-11.906-3.908-16.368.553L89.34 422.659c-4.872 4.872-4.631 12.815.482 17.433C133.798 479.813 192.074 504 256 504c136.966 0 247.999-111.033 248-247.998C504.001 119.193 392.354 7.755 255.545 8z"></path>
           </svg>
         </button>
 
-        {/* Paginación */}
         <button
           onClick={() => setPage(prev => Math.max(prev - 1, 1))}
           className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-          title="Página anterior"
         >
           <FaChevronLeft />
         </button>
         <button
           onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
           className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-          title="Página siguiente"
         >
           <FaChevronRight />
         </button>
 
-        {/* Botón de "Mostrar todo / Mostrar 10" */}
         <button
           onClick={toggleShowAll}
           className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-          title="Mostrar todo / Mostrar solo 10"
         >
           {showAll ? <FaChevronUp /> : <FaChevronDown />}
         </button>
       </div>
 
-      {/* Tabla de tipos de cuenta */}
       {currentTypes.length > 0 ? (
         <table className="min-w-full bg-white shadow rounded-lg">
           <thead className="bg-blue-900 text-white">
@@ -202,7 +194,14 @@ const TypesView = () => {
                 <td className="py-2 px-4">{type.description || '—'}</td>
                 <td className="py-2 px-4">{getCountByType(type.id)}</td>
                 <td className="py-2 px-4 space-x-2">
-                  {/* Botón Editar */}
+                  {/* Botón Ver Datos */}
+                  <button
+                    onClick={() => handleViewData(type.id)} // Redirige a la nueva vista de cuentas
+                    className="border-2 border-blue-500 text-blue-500 px-3 py-1 rounded hover:bg-blue-500 hover:text-white transition duration-200"
+                  >
+                    <FaEye />
+                  </button>
+
                   <button
                     onClick={() => openEditModal(type)}
                     className="border-2 border-yellow-500 text-yellow-500 px-3 py-1 rounded hover:bg-yellow-500 hover:text-white transition duration-200"
@@ -210,7 +209,6 @@ const TypesView = () => {
                     <FaRegEdit />
                   </button>
 
-                  {/* Botón Eliminar */}
                   <button
                     onClick={() => handleDelete(type.id)}
                     className="border-2 border-red-500 text-red-500 px-3 py-1 rounded hover:bg-red-500 hover:text-white transition duration-200"
@@ -226,7 +224,6 @@ const TypesView = () => {
         <p>No hay tipos para mostrar.</p>
       )}
 
-      {/* Modal para agregar tipo */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white w-full max-w-md p-6 rounded-lg shadow-lg">
@@ -271,7 +268,6 @@ const TypesView = () => {
         </div>
       )}
 
-      {/* Modal para editar tipo */}
       {showEditModal && editType && (
         <EditTypeModal
           typeData={editType}

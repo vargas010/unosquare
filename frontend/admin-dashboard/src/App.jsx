@@ -9,6 +9,7 @@ import AccountLeadsForm from "./pages/AccountLeadsForm";
 import AccountView from "./pages/account/AccountView";
 import LeadDetail from "./pages/LeadDetail";
 import TypesView from './pages/TypesView';
+import AccountDetailsView from './pages/AccountDetailsView';
 
 
 const Dashboard = () => (
@@ -35,7 +36,7 @@ function App() {
         <Route path="/account-leads/create" element={<AccountLeadsForm />} />
         <Route path="/account-leads/edit/:id" element={<AccountLeadsForm />} />
         <Route path="/types" element={<TypesView />} />
-
+        <Route path="/accounts/:typeId" element={<AccountDetailsView />} />
       </Routes>
     </AdminLayout>
   );
