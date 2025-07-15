@@ -19,7 +19,6 @@ const LeadsDetails = () => {
     end_date: true,
     notes: true,
   }); // Estado para las columnas a mostrar
-  const [showDropdown, setShowDropdown] = useState(false); // Para mostrar/ocultar el dropdown de columnas
 
   // Estados independientes para paginación y orden en cada tabla
   const [currentPage, setCurrentPage] = useState(1);
@@ -178,6 +177,7 @@ const LeadsDetails = () => {
         <p><strong>Cargo:</strong> {lead.position || '—'}</p>
       </div>
 
+      {/* Cuentas Actuales */}
       <div>
         <h2 className="text-xl font-semibold text-gray-800 mb-2">Cuentas Actuales</h2>
 
@@ -192,36 +192,60 @@ const LeadsDetails = () => {
           />
         </div>
 
-        {/* Contenedor de botones de paginación para Cuentas Actuales */}
+        {/* Fila de botones de orden, paginación y expandir */}
         <div className="flex justify-between items-center mb-4">
-          <div className="flex gap-2">
+          <div className="flex gap-4 items-center">
+            {/* Ordenar */}
             <button
               onClick={handleDateOrder}
-              className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+              className="flex items-center gap-1 px-3 py-1 text-gray-700 hover:text-blue-600 rounded-md hover:bg-gray-100 bg-blue-100 transition-colors"
               title="Ordenar por más recientes/más antiguos"
             >
               {orderBy === 'asc' ? <FaRedoAlt /> : <FaUndoAlt />}
+              Ordenar
             </button>
+
+            {/* Mostrar */}
+            <span className="text-sm text-gray-600">
+              Mostrando {showAllRecords ? filteredCurrentRelations.length : paginateData(filteredCurrentRelations, currentPage).length} de {filteredCurrentRelations.length} registros
+            </span>
+          </div>
+
+          {/* Paginación y Expandir juntos */}
+          <div className="flex items-center gap-2">
+            {/* Paginación */}
+            {!showAllRecords && (
+              <>
+                <button
+                  onClick={prevPage}
+                  className="px-3 py-1 text-gray-700 hover:text-blue-600 rounded-md hover:bg-gray-100 bg-blue-100 transition-colors"
+                  title="Página anterior"
+                  disabled={currentPage === 1}
+                >
+                  <FaChevronLeft />
+                </button>
+                <span className="text-sm text-gray-600">
+                  {currentPage}/{Math.ceil(filteredCurrentRelations.length / rowsPerPage)}
+                </span>
+                <button
+                  onClick={nextPage}
+                  className="px-3 py-1 text-gray-700 hover:text-blue-600 rounded-md hover:bg-gray-100 bg-blue-100 transition-colors"
+                  title="Página siguiente"
+                  disabled={currentPage === Math.ceil(filteredCurrentRelations.length / rowsPerPage)}
+                >
+                  <FaChevronRight />
+                </button>
+              </>
+            )}
+
+            {/* Expandir */}
             <button
-              onClick={prevPage}
-              className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-              title="Página anterior"
-            >
-              <FaChevronLeft />
-            </button>
-            <button
-              onClick={nextPage}
-              className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-              title="Página siguiente"
-            >
-              <FaChevronRight />
-            </button>
-            <button
-              onClick={showAllRecords ? showSome : showAll} // Alterna entre mostrar todos los datos o solo 5 registros
-              className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+              onClick={showAllRecords ? showSome : showAll}
+              className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors"
               title={showAllRecords ? "Mostrar 5 registros" : "Mostrar todos los datos"}
             >
               {showAllRecords ? <FaChevronDown /> : <FaChevronUp />}
+              {showAllRecords ? "Contraer" : "Expandir"}
             </button>
           </div>
         </div>
@@ -246,7 +270,7 @@ const LeadsDetails = () => {
                   </td>
                 </tr>
               ) : (
-                paginateData(filteredCurrentRelations, currentPage).map(rel => (
+                (showAllRecords ? filteredCurrentRelations : paginateData(filteredCurrentRelations, currentPage)).map(rel => (
                   <tr key={rel.id} className="border-b">
                     {showColumns.account_name && <td className="py-2 px-4">{rel.expand?.account_id?.name || '—'}</td>}
                     {showColumns.website && <td className="py-2 px-4">{rel.expand?.account_id?.website || '—'}</td>}
@@ -260,6 +284,10 @@ const LeadsDetails = () => {
           </table>
         </div>
 
+      </div>
+
+      {/* Historial de Cuentas */}
+      <div>
         <h2 className="text-xl font-semibold text-gray-800 mb-2">Historial de Cuentas</h2>
 
         {/* Campo de búsqueda para Historial de Cuentas */}
@@ -273,36 +301,60 @@ const LeadsDetails = () => {
           />
         </div>
 
-        {/* Contenedor de botones de paginación para Historial */}
+        {/* Fila de botones de orden, paginación y expandir */}
         <div className="flex justify-between items-center mb-4">
-          <div className="flex gap-2">
+          <div className="flex gap-4 items-center">
+            {/* Ordenar */}
             <button
               onClick={handleHistoryDateOrder}
-              className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+              className="flex items-center gap-1 px-3 py-1 text-gray-700 hover:text-blue-600 rounded-md hover:bg-gray-100 bg-blue-100 transition-colors"
               title="Ordenar por más recientes/más antiguos"
             >
               {historyOrderBy === 'asc' ? <FaRedoAlt /> : <FaUndoAlt />}
+              Ordenar
             </button>
+
+            {/* Mostrar */}
+            <span className="text-sm text-gray-600">
+              Mostrando {showHistoryAllRecords ? filteredPastRelations.length : paginateHistoryData(filteredPastRelations, historyPage).length} de {filteredPastRelations.length} registros
+            </span>
+          </div>
+
+          {/* Paginación y Expandir juntos */}
+          <div className="flex items-center gap-2">
+            {/* Paginación */}
+            {!showHistoryAllRecords && (
+              <>
+                <button
+                  onClick={prevHistoryPage}
+                  className="px-3 py-1 text-gray-700 hover:text-blue-600 rounded-md hover:bg-gray-100 bg-blue-100 transition-colors"
+                  title="Página anterior"
+                  disabled={historyPage === 1}
+                >
+                  <FaChevronLeft />
+                </button>
+                <span className="text-sm text-gray-600">
+                  {historyPage}/{Math.ceil(filteredPastRelations.length / rowsPerPage)}
+                </span>
+                <button
+                  onClick={nextHistoryPage}
+                  className="px-3 py-1 text-gray-700 hover:text-blue-600 rounded-md hover:bg-gray-100 bg-blue-100 transition-colors"
+                  title="Página siguiente"
+                  disabled={historyPage === Math.ceil(filteredPastRelations.length / rowsPerPage)}
+                >
+                  <FaChevronRight />
+                </button>
+              </>
+            )}
+
+            {/* Expandir */}
             <button
-              onClick={prevHistoryPage}
-              className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-              title="Página anterior"
-            >
-              <FaChevronLeft />
-            </button>
-            <button
-              onClick={nextHistoryPage}
-              className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-              title="Página siguiente"
-            >
-              <FaChevronRight />
-            </button>
-            <button
-              onClick={showHistoryAllRecords ? showHistorySome : showHistoryAll} // Alterna entre mostrar todos los datos del historial o solo 5 registros
-              className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+              onClick={showHistoryAllRecords ? showHistorySome : showHistoryAll}
+              className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors"
               title={showHistoryAllRecords ? "Mostrar 5 registros" : "Mostrar todos los datos"}
             >
               {showHistoryAllRecords ? <FaChevronDown /> : <FaChevronUp />}
+              {showHistoryAllRecords ? "Contraer" : "Expandir"}
             </button>
           </div>
         </div>
@@ -327,7 +379,7 @@ const LeadsDetails = () => {
                   </td>
                 </tr>
               ) : (
-                paginateHistoryData(filteredPastRelations, historyPage).map(rel => (
+                (showHistoryAllRecords ? filteredPastRelations : paginateHistoryData(filteredPastRelations, historyPage)).map(rel => (
                   <tr key={rel.id} className="border-b">
                     {showColumns.account_name && <td className="py-2 px-4">{rel.expand?.account_id?.name || '—'}</td>}
                     {showColumns.website && <td className="py-2 px-4">{rel.expand?.account_id?.website || '—'}</td>}

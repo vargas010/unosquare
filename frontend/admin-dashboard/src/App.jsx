@@ -41,5 +41,4 @@ function App() {
     </AdminLayout>
   );
 }
-
 export default App;

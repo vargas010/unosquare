@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api/axiosConfig';
 import EditTypeModal from "./EditTypeModal";
-import { FaPlus, FaEye, FaRegEdit, FaTrashAlt, FaChevronLeft, FaChevronRight, FaChevronUp, FaChevronDown } from 'react-icons/fa'; 
+import { FaPlus, FaEye, FaRegEdit, FaTrashAlt, FaChevronLeft, FaChevronRight, FaChevronUp, FaChevronDown, FaSortAmountUp, FaSortAmountDown } from 'react-icons/fa'; 
 import UtcClock from "../components/UtcClock"; // Para la hora
 import { useNavigate } from 'react-router-dom'; // Importamos useNavigate para la navegación
 
@@ -107,7 +107,7 @@ const TypesView = () => {
 
   const toggleShowAll = () => {
     setShowAll(prev => !prev);
-    setPage(1);
+    setPage(1); // Reinicia la página a 1 cuando se expande
   };
 
   return (
@@ -137,44 +137,64 @@ const TypesView = () => {
         </button>
       </div>
 
-      <div className="flex justify-start gap-2 mb-4">
-        <button
-          onClick={handleSortOrder}
-          className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transform transition-transform duration-300"
-        >
-          <svg
-            stroke="currentColor"
-            fill="currentColor"
-            strokeWidth="0"
-            viewBox="0 0 512 512"
-            height="1em"
-            width="1em"
-            xmlns="http://www.w3.org/2000/svg"
-            className={`${sortOrder === 'desc' ? 'rotate-180' : ''}`}
+      <div className="flex justify-between items-center mb-4">
+        {/* Ordenar y Mostrando juntos */}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={handleSortOrder}
+            className="flex items-center gap-1 px-3 py-1 text-gray-700 hover:text-blue-600 rounded-md hover:bg-gray-100 bg-blue-100"
+            title={`Orden: ${sortOrder === 'desc' ? 'Más nuevos primero' : 'Más antiguos primero'}`}
           >
-            <path d="M255.545 8c-66.269.119-126.438 26.233-170.86 68.685L48.971 40.971C33.851 25.851 8 36.559 8 57.941V192c0 13.255 10.745 24 24 24h134.059c21.382 0 32.09-25.851 16.971-40.971l-41.75-41.75c30.864-28.899 70.801-44.907 113.23-45.273 92.398-.798 170.283 73.977 169.484 169.442C423.236 348.009 349.816 424 256 424c-41.127 0-79.997-14.678-110.63-41.556-4.743-4.161-11.906-3.908-16.368.553L89.34 422.659c-4.872 4.872-4.631 12.815.482 17.433C133.798 479.813 192.074 504 256 504c136.966 0 247.999-111.033 248-247.998C504.001 119.193 392.354 7.755 255.545 8z"></path>
-          </svg>
-        </button>
+            {sortOrder === 'desc' ? <FaSortAmountDown /> : <FaSortAmountUp />}
+            <span className="text-sm">Ordenar</span>
+          </button>
 
-        <button
-          onClick={() => setPage(prev => Math.max(prev - 1, 1))}
-          className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          <FaChevronLeft />
-        </button>
-        <button
-          onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
-          className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          <FaChevronRight />
-        </button>
+          <span className="text-sm text-gray-600">
+            Mostrando {currentTypes.length} de {filteredTypes.length}
+          </span>
+        </div>
 
-        <button
-          onClick={toggleShowAll}
-          className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          {showAll ? <FaChevronUp /> : <FaChevronDown />}
-        </button>
+        {/* Paginación y Expandir juntos */}
+        <div className="flex items-center gap-4">
+          {!showAll && totalPages > 1 && (
+            <div className="flex items-center gap-1 bg-blue-100 px-3 py-1 rounded-md">
+              <button
+                onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+                className="p-1 text-gray-700 hover:text-blue-600"
+                disabled={page === 1}
+                title="Página anterior"
+              >
+                <FaChevronLeft />
+              </button>
+              
+              <span className="text-sm">{page}/{totalPages}</span>
+              
+              <button
+                onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
+                className="p-1 text-gray-700 hover:text-blue-600"
+                disabled={page === totalPages}
+                title="Página siguiente"
+              >
+                <FaChevronRight />
+              </button>
+            </div>
+          )}
+
+          <button
+            onClick={toggleShowAll}
+            className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors"
+          >
+            {showAll ? (
+              <>
+                <FaChevronDown /> Contraer
+              </>
+            ) : (
+              <>
+                <FaChevronUp /> Expandir
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {currentTypes.length > 0 ? (
@@ -194,9 +214,8 @@ const TypesView = () => {
                 <td className="py-2 px-4">{type.description || '—'}</td>
                 <td className="py-2 px-4">{getCountByType(type.id)}</td>
                 <td className="py-2 px-4 space-x-2">
-                  {/* Botón Ver Datos */}
                   <button
-                    onClick={() => handleViewData(type.id)} // Redirige a la nueva vista de cuentas
+                    onClick={() => handleViewData(type.id)} 
                     className="border-2 border-blue-500 text-blue-500 px-3 py-1 rounded hover:bg-blue-500 hover:text-white transition duration-200"
                   >
                     <FaEye />

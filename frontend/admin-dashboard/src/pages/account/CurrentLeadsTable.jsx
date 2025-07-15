@@ -13,8 +13,7 @@ const CurrentLeadsTable = ({
   currentLeads,
   searchTerm,
   setSearchTerm,
-  orderByCurrentLeads,
-  handleSortCurrentLeads,
+  handleSortCurrentLeads,  // Si esto es pasado como prop, lo dejamos tal cual
   prevPageCurrentLeads,
   nextPageCurrentLeads,
   toggleShowAllCurrentLeads,
@@ -53,6 +52,11 @@ const CurrentLeadsTable = ({
     }
   };
 
+  // Renombramos la función interna de 'handleSortCurrentLeads' a 'sortLeads'
+  const sortLeads = () => {
+    setSortOrder(sortOrder === "desc" ? "asc" : "desc");
+  };
+
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, sortOrder, showAllRecordsCurrentLeads]);
@@ -83,7 +87,7 @@ const CurrentLeadsTable = ({
       <div className="mb-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <button
-            onClick={() => handleSortCurrentLeads()}
+            onClick={sortLeads}  // Ahora usamos sortLeads
             className="flex items-center gap-1 px-3 py-1 text-gray-700 hover:text-blue-600 rounded-md hover:bg-gray-100 bg-blue-100"
             title={`Orden: ${sortOrder === 'desc' ? 'Más nuevos primero' : 'Más antiguos primero'}`}
           >
@@ -142,7 +146,7 @@ const CurrentLeadsTable = ({
 
       <div className="overflow-x-auto">
         <table className="min-w-full">
-          <thead className="bg-blue-50">
+          <thead className="bg-blue-100 text-gray-800">
             <tr>
               <th className="px-4 py-3 text-left">Nombre</th>
               <th className="px-4 py-3 text-left">Email</th>

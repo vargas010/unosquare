@@ -64,13 +64,14 @@ const PreviousLeadsTable = ({
 
   return (
     <div className="bg-white shadow rounded-lg p-6 mt-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">
-        Historial de Leads en esta Cuenta
-      </h2>
+      <div className="flex justify-between items-center mb-4">
+        {/* Título a la izquierda */}
+        <h2 className="text-xl font-semibold text-gray-800">
+          Historial de Leads en esta Cuenta
+        </h2>
 
-      {/* Buscar y ordenar */}
-      <div className="flex justify-between items-center mb-4 gap-4">
-        <div className="flex items-center gap-2">
+        {/* Buscar a la derecha */}
+        <div className="flex items-center">
           <input
             type="text"
             placeholder="Buscar leads..."
@@ -78,7 +79,12 @@ const PreviousLeadsTable = ({
             onChange={(e) => setSearchTerm(e.target.value)}
             className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-100"
           />
-          {/* Ordenar */}
+        </div>
+      </div>
+
+      <div className="flex justify-between items-center mb-4">
+        {/* Ordenar y Mostrar a la izquierda */}
+        <div className="flex items-center gap-3">
           <button
             onClick={() =>
               setOrderByPreviousLeads(orderByPreviousLeads === "asc" ? "desc" : "asc")
@@ -89,9 +95,14 @@ const PreviousLeadsTable = ({
             {orderByPreviousLeads === "asc" ? <FaSortAmountDown /> : <FaSortAmountUp />}
             <span className="text-sm">Ordenar</span>
           </button>
+
+          {/* Mostrar número de leads */}
+          <span className="text-sm text-gray-600">
+            Mostrando {displayedLeads.length} de {sortedLeads.length}
+          </span>
         </div>
 
-        {/* Paginación */}
+        {/* Paginación y Expandir a la derecha */}
         <div className="flex items-center gap-3">
           {!showAllRecordsPreviousLeads && previousLeads.length > leadsPerPage && (
             <div className="flex items-center gap-1 bg-blue-100 px-3 py-1 rounded-md">
@@ -140,7 +151,7 @@ const PreviousLeadsTable = ({
       {/* Tabla de historial de leads */}
       {previousLeads.length > 0 ? (
         <table className="min-w-full table-auto">
-          <thead className="bg-blue-900 text-white">
+          <thead className="bg-blue-100 text-gray-800">
             <tr>
               <th className="py-2 px-4 text-left">Nombre</th>
               <th className="py-2 px-4 text-left">Correo</th>
