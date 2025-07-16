@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/axiosConfig";
-import { FaChevronUp, FaChevronDown, FaUndoAlt, FaRedoAlt, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaChevronUp, FaChevronDown, FaUndoAlt, FaRedoAlt, FaChevronLeft, FaChevronRight, FaSortAmountUp, FaSortAmountDown } from 'react-icons/fa';
 
 const LeadsDetails = () => {
   const { id } = useParams();
@@ -10,25 +10,25 @@ const LeadsDetails = () => {
   const [relations, setRelations] = useState([]);
   const [currentRelations, setCurrentRelations] = useState([]);
   const [pastRelations, setPastRelations] = useState([]);
-  const [searchTermCurrent, setSearchTermCurrent] = useState(''); // Estado para el término de búsqueda de cuentas actuales
-  const [searchTermPast, setSearchTermPast] = useState(''); // Estado para el término de búsqueda del historial de cuentas
+  const [searchTermCurrent, setSearchTermCurrent] = useState('');
+  const [searchTermPast, setSearchTermPast] = useState('');
   const [showColumns, setShowColumns] = useState({
     account_name: true,
     website: true,
     start_date: true,
     end_date: true,
     notes: true,
-  }); // Estado para las columnas a mostrar
+  });
 
-  // Estados independientes para paginación y orden en cada tabla
+  // Paginación y orden
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage] = useState(5); // Filas por página
-  const [orderBy, setOrderBy] = useState('desc'); // Orden de las cuentas
-  const [showAllRecords, setShowAllRecords] = useState(false); // Estado para mostrar todos los registros
+  const [rowsPerPage] = useState(5);
+  const [orderBy, setOrderBy] = useState('desc');
+  const [showAllRecords, setShowAllRecords] = useState(false);
 
-  const [historyPage, setHistoryPage] = useState(1); // Página del historial
-  const [historyOrderBy, setHistoryOrderBy] = useState('desc'); // Orden del historial
-  const [showHistoryAllRecords, setShowHistoryAllRecords] = useState(false); // Mostrar todos los registros del historial
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyOrderBy, setHistoryOrderBy] = useState('desc');
+  const [showHistoryAllRecords, setShowHistoryAllRecords] = useState(false);
 
   useEffect(() => {
     api.get(`/leads/${id}`)
@@ -49,28 +49,24 @@ const LeadsDetails = () => {
       .catch(err => console.error("Error al obtener relaciones:", err));
   }, [id]);
 
-  // Filtrado de cuentas actuales
   const filteredCurrentRelations = currentRelations.filter(rel =>
     rel.expand?.account_id?.name.toLowerCase().includes(searchTermCurrent.toLowerCase()) ||
     rel.expand?.account_id?.website.toLowerCase().includes(searchTermCurrent.toLowerCase()) ||
     rel.notes.toLowerCase().includes(searchTermCurrent.toLowerCase())
   );
 
-  // Filtrado de historial de cuentas
   const filteredPastRelations = pastRelations.filter(rel =>
     rel.expand?.account_id?.name.toLowerCase().includes(searchTermPast.toLowerCase()) ||
     rel.expand?.account_id?.website.toLowerCase().includes(searchTermPast.toLowerCase()) ||
     rel.notes.toLowerCase().includes(searchTermPast.toLowerCase())
   );
 
-  // Paginación de datos (Cuentas Actuales)
   const paginateData = (data, page) => {
     const startIndex = (page - 1) * rowsPerPage;
     const endIndex = startIndex + rowsPerPage;
     return data.slice(startIndex, endIndex);
   };
 
-  // Manejo del cambio de página para las cuentas actuales
   const nextPage = () => {
     if (currentPage < Math.ceil(filteredCurrentRelations.length / rowsPerPage)) {
       setCurrentPage(currentPage + 1);
@@ -84,16 +80,15 @@ const LeadsDetails = () => {
   };
 
   const showAll = () => {
-    setShowAllRecords(true); // Muestra todos los registros
-    setCurrentPage(1); // Reinicia la página a la 1
+    setShowAllRecords(true);
+    setCurrentPage(1);
   };
 
   const showSome = () => {
-    setShowAllRecords(false); // Muestra solo 5 registros
-    setCurrentPage(1); // Reinicia la página a la 1
+    setShowAllRecords(false);
+    setCurrentPage(1);
   };
 
-  // Ordenar por más recientes o más antiguos (Cuentas Actuales)
   const handleDateOrder = () => {
     const newOrder = orderBy === 'asc' ? 'desc' : 'asc';
     setOrderBy(newOrder);
@@ -105,14 +100,12 @@ const LeadsDetails = () => {
     setCurrentRelations(sortedData);
   };
 
-  // Paginación de datos (Historial de Cuentas)
   const paginateHistoryData = (data, page) => {
     const startIndex = (page - 1) * rowsPerPage;
     const endIndex = startIndex + rowsPerPage;
     return data.slice(startIndex, endIndex);
   };
 
-  // Manejo del cambio de página para el historial
   const nextHistoryPage = () => {
     if (historyPage < Math.ceil(filteredPastRelations.length / rowsPerPage)) {
       setHistoryPage(historyPage + 1);
@@ -126,16 +119,15 @@ const LeadsDetails = () => {
   };
 
   const showHistoryAll = () => {
-    setShowHistoryAllRecords(true); // Muestra todos los registros del historial
-    setHistoryPage(1); // Reinicia la página a la 1
+    setShowHistoryAllRecords(true);
+    setHistoryPage(1);
   };
 
   const showHistorySome = () => {
-    setShowHistoryAllRecords(false); // Muestra solo 5 registros del historial
-    setHistoryPage(1); // Reinicia la página a la 1
+    setShowHistoryAllRecords(false);
+    setHistoryPage(1);
   };
 
-  // Ordenar por más recientes o más antiguos (Historial de Cuentas)
   const handleHistoryDateOrder = () => {
     const newOrder = historyOrderBy === 'asc' ? 'desc' : 'asc';
     setHistoryOrderBy(newOrder);
@@ -161,7 +153,7 @@ const LeadsDetails = () => {
 
         <button
           onClick={() => navigate(`/leads/edit/${lead.id}`)}
-          className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded"
+          className="px-4 py-2 bg-green-600 text-white hover:bg-green-700 rounded"
         >
           Editar Lead
         </button>
@@ -186,9 +178,9 @@ const LeadsDetails = () => {
           <input
             type="text"
             placeholder="Buscar Cuenta..."
-            className="border-2 border-gray-300 px-3 py-2 rounded w-full focus:outline-none focus:border-blue-500 transition duration-200"
             value={searchTermCurrent}
-            onChange={(e) => setSearchTermCurrent(e.target.value)} // Actualizamos el término de búsqueda
+            onChange={(e) => setSearchTermCurrent(e.target.value)}
+            className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-100"
           />
         </div>
 
@@ -201,7 +193,7 @@ const LeadsDetails = () => {
               className="flex items-center gap-1 px-3 py-1 text-gray-700 hover:text-blue-600 rounded-md hover:bg-gray-100 bg-blue-100 transition-colors"
               title="Ordenar por más recientes/más antiguos"
             >
-              {orderBy === 'asc' ? <FaRedoAlt /> : <FaUndoAlt />}
+              {orderBy === 'asc' ? <FaSortAmountDown /> : <FaSortAmountUp />}
               Ordenar
             </button>
 
@@ -253,7 +245,7 @@ const LeadsDetails = () => {
         {/* Tabla de Cuentas Actuales */}
         <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
           <table className="min-w-full text-sm">
-            <thead className="bg-blue-900 text-white">
+            <thead className="bg-blue-100 text-gray-800">
               <tr>
                 {showColumns.account_name && <th className="py-3 px-4 text-left">Nombre de la Cuenta</th>}
                 {showColumns.website && <th className="py-3 px-4 text-left">Sitio Web</th>}
@@ -295,9 +287,9 @@ const LeadsDetails = () => {
           <input
             type="text"
             placeholder="Buscar en Historial..."
-            className="border-2 border-gray-300 px-3 py-2 rounded w-full focus:outline-none focus:border-blue-500 transition duration-200"
             value={searchTermPast}
-            onChange={(e) => setSearchTermPast(e.target.value)} // Actualizamos el término de búsqueda para el historial
+            onChange={(e) => setSearchTermPast(e.target.value)}
+            className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-100"
           />
         </div>
 
@@ -310,7 +302,7 @@ const LeadsDetails = () => {
               className="flex items-center gap-1 px-3 py-1 text-gray-700 hover:text-blue-600 rounded-md hover:bg-gray-100 bg-blue-100 transition-colors"
               title="Ordenar por más recientes/más antiguos"
             >
-              {historyOrderBy === 'asc' ? <FaRedoAlt /> : <FaUndoAlt />}
+              {orderBy === 'asc' ? <FaSortAmountDown /> : <FaSortAmountUp />}
               Ordenar
             </button>
 
@@ -362,7 +354,7 @@ const LeadsDetails = () => {
         {/* Tabla de Historial de Cuentas */}
         <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
           <table className="min-w-full text-sm">
-            <thead className="bg-gray-800 text-white">
+            <thead className="bg-blue-100 text-gray-800">
               <tr>
                 {showColumns.account_name && <th className="py-3 px-4 text-left">Nombre de la Cuenta</th>}
                 {showColumns.website && <th className="py-3 px-4 text-left">Sitio Web</th>}
