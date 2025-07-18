@@ -126,7 +126,7 @@ const TypesView = () => {
           placeholder="Buscar Tipo..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="border-2 border-gray-300 px-3 py-2 rounded w-full max-w-xs focus:outline-none focus:border-blue-500 transition"
+            className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-100"
         />
         <button
           onClick={() => setShowModal(true)}
@@ -199,7 +199,7 @@ const TypesView = () => {
 
       {currentTypes.length > 0 ? (
         <table className="min-w-full bg-white shadow rounded-lg">
-          <thead className="bg-blue-900 text-white">
+          <thead className="bg-blue-100 text-gray-800">
             <tr>
               <th className="py-2 px-4 text-left">Tipo</th>
               <th className="py-2 px-4 text-left">Descripción</th>

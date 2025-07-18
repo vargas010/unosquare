@@ -28,30 +28,23 @@ const Leads = () => {
   }, []);
 
   // Cambiamos la lógica de ordenación
-  const sortedLeads = useMemo(() => {
-    // Verificamos si los leads están disponibles
-    if (!leads) return [];
+const sortedLeads = useMemo(() => {
+  const sorted = [...leads].sort((a, b) => {
+    const nameA = a.name.toLowerCase();
+    const nameB = b.name.toLowerCase();
+    return orderBy === 'asc'
+      ? nameA.localeCompare(nameB)
+      : nameB.localeCompare(nameA);
+  });
 
-    const sorted = [...leads].sort((a, b) => {
-      const dateA = new Date(a.createdAt);
-      const dateB = new Date(b.createdAt);
-
-      // Ordenamos según el valor de 'orderBy'
-      if (orderBy === 'asc') {
-        return dateA - dateB;
-      } else {
-        return dateB - dateA;
-      }
-    });
-
-    return sorted.filter(lead =>
-      lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.personal_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.work_email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [leads, searchTerm, orderBy]);  // Asegurándonos de que 'orderBy' esté correctamente monitoreado
+  return sorted.filter(lead =>
+    lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    lead.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    lead.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    lead.personal_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    lead.work_email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+}, [leads, searchTerm, orderBy]);
 
   const totalPages = Math.ceil(sortedLeads.length / rowsPerPage);
   const displayedLeads = showAllRecords
@@ -109,7 +102,7 @@ const Leads = () => {
           <input
             type="text"
             placeholder="Buscar leads..."
-            className="border-2 border-gray-300 px-3 py-2 rounded w-full focus:outline-none focus:border-blue-500 transition-colors"
+            className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-100"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -175,7 +168,7 @@ const Leads = () => {
       </div>
 
       <table className="min-w-full bg-white shadow rounded-lg overflow-hidden">
-        <thead className="bg-blue-900 text-white">
+        <thead className="bg-blue-100 text-gray-800">
           <tr>
             <th className="py-2 px-4 text-left cursor-pointer">Nombre</th>
             <th className="py-2 px-4 text-left cursor-pointer">Apellido</th>
