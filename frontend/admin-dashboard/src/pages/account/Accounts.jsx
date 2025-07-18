@@ -1,7 +1,17 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axiosConfig';
-import { FaPlus, FaEye, FaChevronLeft, FaChevronRight, FaSortAmountUp, FaSortAmountDown, FaChevronUp, FaChevronDown } from 'react-icons/fa'; 
+import {
+  FaPlus,
+  FaEye,
+  FaRegEdit,
+  FaChevronLeft,
+  FaChevronRight,
+  FaSortAmountUp,
+  FaSortAmountDown,
+  FaChevronUp,
+  FaChevronDown
+} from 'react-icons/fa';
 import UtcClock from "../../components/UtcClock";
 
 const Accounts = () => {
@@ -17,7 +27,6 @@ const Accounts = () => {
     phone: true,
     website: true,
   });
-  const [showDropdown, setShowDropdown] = useState(false);
   const navigate = useNavigate();
 
   const fetchAccounts = () => {
@@ -36,9 +45,11 @@ const Accounts = () => {
 
   const sortedAccounts = useMemo(() => {
     const sorted = [...accounts].sort((a, b) => {
-      const dateA = new Date(a.createdAt);
-      const dateB = new Date(b.createdAt);
-      return orderBy === 'desc' ? dateB - dateA : dateA - dateB;
+      const nameA = a.name.toLowerCase();
+      const nameB = b.name.toLowerCase();
+      return orderBy === 'asc'
+        ? nameA.localeCompare(nameB)
+        : nameB.localeCompare(nameA);
     });
     return sorted.filter(account =>
       account.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -83,7 +94,7 @@ const Accounts = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Historial de Leads en esta Cuenta</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Accounts</h1>
         <button
           onClick={() => navigate('/accounts/create')}
           className="px-4 py-2 border-2 border-green-600 text-green-600 rounded hover:bg-green-600 hover:text-white transition-colors"
@@ -95,22 +106,19 @@ const Accounts = () => {
 
       <UtcClock />
 
-      {/* Fila de Búsqueda y Ordenación */}
+      {/* Búsqueda y paginación */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex gap-2 w-full max-w-xs">
-          {/* Búsqueda de Leads */}
           <input
             type="text"
             placeholder="Buscar leads..."
-            className="border-2 border-gray-300 px-3 py-2 rounded w-full focus:outline-none focus:border-blue-500 transition-colors"
+            className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-100"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        
-        {/* Fila de Paginación y Expandir */}
+
         <div className="flex items-center gap-4">
-          {/* Paginación */}
           <div className="flex items-center gap-2">
             <button
               onClick={prevPage}
@@ -133,7 +141,6 @@ const Accounts = () => {
             </button>
           </div>
 
-          {/* Expandir o Contraer */}
           <button
             onClick={showAllRecords ? showSome : showAll}
             className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors"
@@ -145,33 +152,31 @@ const Accounts = () => {
         </div>
       </div>
 
-      {/* Fila de Ordenar y Mostrar */}
+      {/* Ordenar y resumen */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex gap-4 items-center">
-          {/* Ordenar */}
           <button
             onClick={handleOrderChange}
             className="flex items-center gap-1 px-3 py-1 text-gray-700 hover:text-blue-600 rounded-md hover:bg-gray-100 bg-blue-100 transition-colors"
-            title="Ordenar por más recientes/más antiguos"
+            title="Ordenar por nombre"
           >
             {orderBy === 'asc' ? <FaSortAmountDown /> : <FaSortAmountUp />}
             Ordenar
           </button>
-
-          {/* Mostrar */}
           <span className="text-sm text-gray-600">
             Mostrando {displayedAccounts.length} de {sortedAccounts.length}
           </span>
         </div>
       </div>
 
+      {/* Tabla */}
       <table className="min-w-full bg-white shadow rounded-lg overflow-hidden">
-        <thead className="bg-blue-900 text-white">
+        <thead className="bg-blue-100 text-gray-800">
           <tr>
-            {showColumns.id && <th className="py-2 px-4 text-left cursor-pointer">ID</th>}
-            {showColumns.name && <th className="py-2 px-4 text-left cursor-pointer">Nombre</th>}
-            {showColumns.website && <th className="py-2 px-4 text-left cursor-pointer">Sitio Web</th>}
-            {showColumns.phone && <th className="py-2 px-4 text-left cursor-pointer">Teléfono</th>}
+            {showColumns.id && <th className="py-2 px-4 text-left">ID</th>}
+            {showColumns.name && <th className="py-2 px-4 text-left">Nombre</th>}
+            {showColumns.website && <th className="py-2 px-4 text-left">Sitio Web</th>}
+            {showColumns.phone && <th className="py-2 px-4 text-left">Teléfono</th>}
             <th className="py-2 px-4 text-left">Acciones</th>
           </tr>
         </thead>
@@ -182,12 +187,20 @@ const Accounts = () => {
               {showColumns.name && <td className="py-2 px-4">{account.name}</td>}
               {showColumns.website && <td className="py-2 px-4">{account.website}</td>}
               {showColumns.phone && <td className="py-2 px-4">{account.phone}</td>}
-              <td className="py-2 px-4">
+              <td className="py-2 px-4 space-x-2">
                 <button
                   onClick={() => navigate(`/accounts/view/${account.id}`)}
-                  className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                  className="border-2 border-blue-600 text-blue-600 px-3 py-1 rounded hover:bg-blue-600 hover:text-white transition duration-200"
+                  title="Ver cuenta"
                 >
                   <FaEye />
+                </button>
+                <button
+                  onClick={() => navigate(`/accounts/edit/${account.id}`)}
+                  className="border-2 border-yellow-500 text-yellow-500 px-3 py-1 rounded hover:bg-yellow-500 hover:text-white transition duration-200"
+                  title="Editar cuenta"
+                >
+                  <FaRegEdit />
                 </button>
               </td>
             </tr>

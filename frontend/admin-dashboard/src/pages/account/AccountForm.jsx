@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/axiosConfig';
+import Select from 'react-select'; // Importamos react-select
 
 const AccountForm = () => {
   const { id } = useParams();
@@ -92,6 +93,19 @@ const AccountForm = () => {
       });
   };
 
+  // Formatear las opciones para react-select
+  const industryOptions = industries.map((industry) => ({
+    value: industry.id,
+    label: industry.name
+  }));
+
+  const handleIndustryChange = selectedOption => {
+    setForm({
+      ...form,
+      industry_type: selectedOption ? selectedOption.value : ''
+    });
+  };
+
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-800 mb-4">
@@ -101,29 +115,23 @@ const AccountForm = () => {
       <form onSubmit={handleSubmit} className="bg-white p-6 shadow rounded-lg space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <input type="text" name="name" value={form.name} onChange={handleChange} placeholder="Name" className="p-2 border rounded" required />
-          <input type="text" name="website" value={form.website} onChange={handleChange} placeholder="website" className="p-2 border rounded" />
-          <input type="text" name="address" value={form.address} onChange={handleChange} placeholder="Addres" className="p-2 border rounded" />
-          <input type="text" name="phone" value={form.phone} onChange={handleChange} placeholder="Telphon" className="p-2 border rounded" />
+          <input type="text" name="website" value={form.website} onChange={handleChange} placeholder="Website" className="p-2 border rounded" />
+          <input type="text" name="address" value={form.address} onChange={handleChange} placeholder="Address" className="p-2 border rounded" />
+          <input type="text" name="phone" value={form.phone} onChange={handleChange} placeholder="Phone" className="p-2 border rounded" />
           <input type="text" name="tax_id" value={form.tax_id} onChange={handleChange} placeholder="NIT" className="p-2 border rounded" />
         </div>
 
         {/* Campo para seleccionar el tipo de industria */}
         <div className="grid grid-cols-2 gap-4">
           <label className="p-2">Type Account</label>
-          <select
+          <Select
             name="industry_type"
-            value={form.industry_type}
-            onChange={handleChange}
-            className="p-2 border rounded"
+            value={industryOptions.find(option => option.value === form.industry_type)} // Establecer valor seleccionado
+            onChange={handleIndustryChange}
+            options={industryOptions}
+            placeholder="Select or search for industry..."
             required
-          >
-            <option value="">Selection type Account</option>
-            {industries.map((industry) => (
-              <option key={industry.id} value={industry.id}>
-                {industry.name}
-              </option>
-            ))}
-          </select>
+          />
 
           {/* Botón para crear un nuevo tipo de industria */}
           <button
