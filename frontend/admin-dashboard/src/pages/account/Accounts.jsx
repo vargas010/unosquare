@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../api/axiosConfig';
 import {
   FaPlus,
   FaEye,
@@ -30,11 +29,12 @@ const Accounts = () => {
   const navigate = useNavigate();
 
   const fetchAccounts = () => {
-    api.get('/accounts')
-      .then(res => {
-        setAccounts(res.data.items || []);
+    fetch('http://localhost:5000/accounts')
+      .then((res) => res.json())
+      .then((data) => {
+        setAccounts(data.items || []);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('Error al obtener cuentas:', err);
       });
   };

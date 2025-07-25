@@ -10,12 +10,16 @@ import AccountView from "./pages/account/AccountView";
 import LeadDetail from "./pages/LeadDetail";
 import TypesView from './pages/TypesView';
 import AccountDetailsView from './pages/AccountDetailsView';
-
+import LeadsCarousel from './pages/LeadsCarousel';
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
 const Dashboard = () => (
   <>
     <h1 className="text-3xl font-semibold text-gray-800">Dashboard</h1>
     <p className="text-gray-600 mt-2">Bienvenido a la parte administrativa</p>
+    
+    <LeadsCarousel />
   </>
 );
 
@@ -41,4 +45,5 @@ function App() {
     </AdminLayout>
   );
 }
+
 export default App;

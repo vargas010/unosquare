@@ -131,3 +131,45 @@ def patch_account_lead(relation_id):
         return jsonify(response.json())
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+@account_leads_bp.route('/account-leads/recent', methods=['GET'])
+def get_recent_account_leads():
+    try:
+        response = requests.get(
+            "http://127.0.0.1:8090/api/collections/account_leads/records?expand=account_id.type_id,lead_id&perPage=200"
+        )
+        response.raise_for_status()
+        data = response.json().get("items", [])
+
+        now = datetime.utcnow()
+        current_month = now.month
+        current_year = now.year
+
+        recent_leads = []
+        for item in data:
+            start_date_str = item.get("start_date")
+            if not start_date_str:
+                continue
+
+            try:
+                start_date = datetime.strptime(start_date_str[:10], "%Y-%m-%d")
+                if start_date.month == current_month and start_date.year == current_year:
+                    lead_name = item.get("expand", {}).get("lead_id", {}).get("name", "Sin nombre")
+                    account = item.get("expand", {}).get("account_id", {})
+                    account_name = account.get("name", "Sin empresa")
+                    type_name = account.get("expand", {}).get("type_id", {}).get("name", "Sin tipo")
+
+                    recent_leads.append({
+                        "id": item.get("id"),
+                        "start_date": start_date_str,
+                        "lead_name": lead_name,
+                        "account_name": account_name,
+                        "account_type": type_name
+                    })
+            except Exception:
+                continue
+
+        return jsonify(recent_leads), 200
+
+    except Exception as e:
+        print("❌ Error en get_recent_account_leads:", str(e))
+        return jsonify({'error': str(e)}), 500

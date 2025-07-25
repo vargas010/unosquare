@@ -1,18 +1,18 @@
 from flask import Flask
-from flask_cors import CORS  # ⬅️ Importar CORS
+from flask_cors import CORS
 from routes.accounts_routes import accounts_bp
-from routes.leads_routes import leads_bp
+from routes.leads_routes import leads_bp  # Asegúrate de que este sea el archivo correcto
 from routes.account_leads_routes import account_leads_bp
 from routes.types_routes import types_bp
 
 app = Flask(__name__)
-CORS(app)  # ⬅️ Habilitar CORS para todas las rutas
+CORS(app)  # Habilitar CORS para permitir solicitudes del frontend
 
+# Registrar el blueprint de leads
 app.register_blueprint(accounts_bp)
 app.register_blueprint(leads_bp)
 app.register_blueprint(account_leads_bp)
 app.register_blueprint(types_bp)
-
 
 @app.route('/')
 def home():
