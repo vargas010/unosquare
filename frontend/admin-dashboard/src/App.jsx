@@ -10,7 +10,8 @@ import AccountView from "./pages/account/AccountView";
 import LeadDetail from "./pages/LeadDetail";
 import TypesView from './pages/TypesView';
 import AccountDetailsView from './pages/AccountDetailsView';
-
+import Projects from './pages/Projects';
+import BoardView from './pages/BoardView';
 
 const Dashboard = () => (
   <>
@@ -37,6 +38,8 @@ function App() {
         <Route path="/account-leads/edit/:id" element={<AccountLeadsForm />} />
         <Route path="/types" element={<TypesView />} />
         <Route path="/accounts/:typeId" element={<AccountDetailsView />} />
+        <Route path="/projects" element={<Projects />} />
+        <Route path="/projects/:projectId/view" element={<BoardView />} />
       </Routes>
     </AdminLayout>
   );
