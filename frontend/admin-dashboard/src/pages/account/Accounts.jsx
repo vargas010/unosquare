@@ -20,11 +20,13 @@ const Accounts = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage] = useState(5);
   const [showAllRecords, setShowAllRecords] = useState(false);
+  const [types, setTypes] = useState([]);
   const [showColumns, setShowColumns] = useState({
     id: true,
     name: true,
     phone: true,
     website: true,
+    type_id: true, // Añadir la opción para mostrar type_id
   });
   const navigate = useNavigate();
 
@@ -42,6 +44,22 @@ const Accounts = () => {
   useEffect(() => {
     fetchAccounts();
   }, []);
+
+  useEffect(() => {
+  const fetchTypes = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/types');
+      const data = await response.json();
+      setTypes(data.items || []);
+    } catch (error) {
+      console.error('Error fetching types:', error);
+    }
+  };
+
+  fetchTypes();
+  fetchAccounts(); // Ya tienes esta función, por lo que solo la llamas aquí
+}, []);
+
 
   const sortedAccounts = useMemo(() => {
     const sorted = [...accounts].sort((a, b) => {
@@ -111,7 +129,7 @@ const Accounts = () => {
         <div className="flex gap-2 w-full max-w-xs">
           <input
             type="text"
-            placeholder="Buscar leads..."
+            placeholder="Buscar Accounts..."
             className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-100"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -171,15 +189,17 @@ const Accounts = () => {
 
       {/* Tabla */}
       <table className="min-w-full bg-white shadow rounded-lg overflow-hidden">
-        <thead className="bg-blue-100 text-gray-800">
-          <tr>
-            {showColumns.id && <th className="py-2 px-4 text-left">ID</th>}
-            {showColumns.name && <th className="py-2 px-4 text-left">Nombre</th>}
-            {showColumns.website && <th className="py-2 px-4 text-left">Sitio Web</th>}
-            {showColumns.phone && <th className="py-2 px-4 text-left">Teléfono</th>}
-            <th className="py-2 px-4 text-left">Acciones</th>
-          </tr>
-        </thead>
+<thead className="bg-blue-100 text-gray-800">
+  <tr>
+    {showColumns.id && <th className="py-2 px-4 text-left">ID</th>}
+    {showColumns.name && <th className="py-2 px-4 text-left">Nombre</th>}
+    {showColumns.website && <th className="py-2 px-4 text-left">Sitio Web</th>}
+    {showColumns.phone && <th className="py-2 px-4 text-left">Teléfono</th>}
+    {showColumns.type_id && <th className="py-2 px-4 text-left">Tipo</th>}
+    <th className="py-2 px-4 text-left">Acciones</th>
+  </tr>
+</thead>
+
         <tbody>
           {displayedAccounts.map((account) => (
             <tr key={account.id} className="border-b hover:bg-gray-50">
@@ -187,6 +207,15 @@ const Accounts = () => {
               {showColumns.name && <td className="py-2 px-4">{account.name}</td>}
               {showColumns.website && <td className="py-2 px-4">{account.website}</td>}
               {showColumns.phone && <td className="py-2 px-4">{account.phone}</td>}
+              {showColumns.type_id && (
+  <td className="py-2 px-4">
+    {
+      types.length > 0 && account.type_id
+        ? types.find(type => type.id === account.type_id)?.name || 'Desconocido'
+        : 'No Asignado'
+    }
+  </td>
+)}
               <td className="py-2 px-4 space-x-2">
                 <button
                   onClick={() => navigate(`/accounts/view/${account.id}`)}

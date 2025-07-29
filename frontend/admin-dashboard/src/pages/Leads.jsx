@@ -4,6 +4,21 @@ import api from '../api/axiosConfig';
 import { FaPlus, FaEye, FaRegEdit, FaTrashAlt, FaChevronLeft, FaChevronRight, FaSortAmountUp, FaSortAmountDown, FaChevronUp, FaChevronDown } from 'react-icons/fa'; 
 import UtcClock from "../components/UtcClock";
 
+const handleDelete = (leadId) => {
+  const confirmDelete = window.confirm("¿Estás seguro de que deseas eliminar este lead?");
+  if (confirmDelete) {
+    api.delete(`/leads/${leadId}`)
+      .then(res => {
+        // Actualizamos el estado después de eliminar el lead
+        setLeads((prevLeads) => prevLeads.filter(lead => lead.id !== leadId));
+        console.log("Lead eliminado correctamente");
+      })
+      .catch(err => {
+        console.error("Error al eliminar el lead:", err);
+      });
+  }
+};
+
 const Leads = () => {
   const [leads, setLeads] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
