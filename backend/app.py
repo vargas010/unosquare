@@ -9,23 +9,17 @@ from routes.project_boards_routes import project_boards_bp
 from routes.project_tasks_routes import project_tasks_bp
 
 app = Flask(__name__)
-<<<<<<< HEAD
+
 CORS(app)
-=======
-CORS(app)  # Habilitar CORS para permitir solicitudes del frontend
->>>>>>> 13a35e6bf56eb9ba8e48801f87715bf4ee8e2f3b
 
 # Registrar el blueprint de leads
 app.register_blueprint(accounts_bp)
 app.register_blueprint(leads_bp)
 app.register_blueprint(account_leads_bp)
 app.register_blueprint(types_bp)
-<<<<<<< HEAD
 app.register_blueprint(project_bp)
 app.register_blueprint(project_boards_bp)
 app.register_blueprint(project_tasks_bp)
-=======
->>>>>>> 13a35e6bf56eb9ba8e48801f87715bf4ee8e2f3b
 
 @app.route('/')
 def home():
