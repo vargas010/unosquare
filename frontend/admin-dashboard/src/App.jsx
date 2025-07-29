@@ -10,9 +10,14 @@ import AccountView from "./pages/account/AccountView";
 import LeadDetail from "./pages/LeadDetail";
 import TypesView from './pages/TypesView';
 import AccountDetailsView from './pages/AccountDetailsView';
+<<<<<<< HEAD
+import Projects from './pages/Projects';
+import BoardView from './pages/BoardView';
+=======
 import LeadsCarousel from './pages/LeadsCarousel';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+>>>>>>> 13a35e6bf56eb9ba8e48801f87715bf4ee8e2f3b
 
 const Dashboard = () => (
   <>
@@ -41,6 +46,8 @@ function App() {
         <Route path="/account-leads/edit/:id" element={<AccountLeadsForm />} />
         <Route path="/types" element={<TypesView />} />
         <Route path="/accounts/:typeId" element={<AccountDetailsView />} />
+        <Route path="/projects" element={<Projects />} />
+        <Route path="/projects/:projectId/view" element={<BoardView />} />
       </Routes>
     </AdminLayout>
   );
