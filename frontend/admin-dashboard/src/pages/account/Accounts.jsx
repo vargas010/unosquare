@@ -191,7 +191,7 @@ const Accounts = () => {
       <table className="min-w-full bg-white shadow rounded-lg overflow-hidden">
 <thead className="bg-blue-100 text-gray-800">
   <tr>
-    {showColumns.id && <th className="py-2 px-4 text-left">ID</th>}
+    {/* Elimina la columna ID */}
     {showColumns.name && <th className="py-2 px-4 text-left">Nombre</th>}
     {showColumns.website && <th className="py-2 px-4 text-left">Sitio Web</th>}
     {showColumns.phone && <th className="py-2 px-4 text-left">Teléfono</th>}
@@ -200,41 +200,42 @@ const Accounts = () => {
   </tr>
 </thead>
 
-        <tbody>
-          {displayedAccounts.map((account) => (
-            <tr key={account.id} className="border-b hover:bg-gray-50">
-              {showColumns.id && <td className="py-2 px-4">{account.id}</td>}
-              {showColumns.name && <td className="py-2 px-4">{account.name}</td>}
-              {showColumns.website && <td className="py-2 px-4">{account.website}</td>}
-              {showColumns.phone && <td className="py-2 px-4">{account.phone}</td>}
-              {showColumns.type_id && (
-  <td className="py-2 px-4">
-    {
-      types.length > 0 && account.type_id
-        ? types.find(type => type.id === account.type_id)?.name || 'Desconocido'
-        : 'No Asignado'
-    }
-  </td>
-)}
-              <td className="py-2 px-4 space-x-2">
-                <button
-                  onClick={() => navigate(`/accounts/view/${account.id}`)}
-                  className="border-2 border-blue-600 text-blue-600 px-3 py-1 rounded hover:bg-blue-600 hover:text-white transition duration-200"
-                  title="Ver cuenta"
-                >
-                  <FaEye />
-                </button>
-                <button
-                  onClick={() => navigate(`/accounts/edit/${account.id}`)}
-                  className="border-2 border-yellow-500 text-yellow-500 px-3 py-1 rounded hover:bg-yellow-500 hover:text-white transition duration-200"
-                  title="Editar cuenta"
-                >
-                  <FaRegEdit />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
+<tbody>
+  {displayedAccounts.map((account) => (
+    <tr key={account.id} className="border-b hover:bg-gray-50">
+      {/* Elimina la columna ID */}
+      {showColumns.name && <td className="py-2 px-4">{account.name}</td>}
+      {showColumns.website && <td className="py-2 px-4">{account.website}</td>}
+      {showColumns.phone && <td className="py-2 px-4">{account.phone}</td>}
+      {showColumns.type_id && (
+        <td className="py-2 px-4">
+          {
+            types.length > 0 && account.type_id
+              ? types.find(type => type.id === account.type_id)?.name || 'Desconocido'
+              : 'No Asignado'
+          }
+        </td>
+      )}
+      <td className="py-2 px-4 space-x-2">
+        <button
+          onClick={() => navigate(`/accounts/view/${account.id}`)}
+          className="border-2 border-blue-600 text-blue-600 px-3 py-1 rounded hover:bg-blue-600 hover:text-white transition duration-200"
+          title="Ver cuenta"
+        >
+          <FaEye />
+        </button>
+        <button
+          onClick={() => navigate(`/accounts/edit/${account.id}`)}
+          className="border-2 border-yellow-500 text-yellow-500 px-3 py-1 rounded hover:bg-yellow-500 hover:text-white transition duration-200"
+          title="Editar cuenta"
+        >
+          <FaRegEdit />
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
+
       </table>
     </div>
   );

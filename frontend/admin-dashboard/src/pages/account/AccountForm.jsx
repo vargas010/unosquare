@@ -36,14 +36,15 @@ const AccountForm = () => {
       api.get(`/accounts/${id}`)
         .then(res => {
           const data = res.data;
-          setForm({
-            name: data.name || '',
-            website: data.website || '',
-            address: data.address || '',
-            phone: data.phone || '',
-            tax_id: data.tax_id || '',
-            industry_type: data.industry_type || '' // Cargar el tipo de industria si existe
-          });
+setForm({
+  name: data.name || '',
+  website: data.website || '',
+  address: data.address || '',
+  phone: data.phone || '',
+  tax_id: data.tax_id || '',
+  industry_type: data.industry_type || ''  // Verifica que este campo sea correcto
+});
+
         })
         .catch(err => {
           console.error("Error al cargar los datos de la cuenta:", err);
@@ -57,10 +58,10 @@ const AccountForm = () => {
 
   const handleSubmit = e => {
     e.preventDefault();
-    const requestData = { 
-      ...form, 
-      industry_type: form.industry_type || '' // Asegúrate de incluir el tipo de industria
-    };
+const requestData = { 
+  ...form, 
+  industry_type: form.industry_type || '' // Asegúrate de enviar el tipo de industria
+};
 
     const request = isEdit ? api.put(`/accounts/${id}`, requestData) : api.post('/accounts', requestData);
 
@@ -124,14 +125,15 @@ const AccountForm = () => {
         {/* Campo para seleccionar el tipo de industria */}
         <div className="grid grid-cols-2 gap-4">
           <label className="p-2">Type Account</label>
-          <Select
-            name="industry_type"
-            value={industryOptions.find(option => option.value === form.industry_type)} // Establecer valor seleccionado
-            onChange={handleIndustryChange}
-            options={industryOptions}
-            placeholder="Select or search for industry..."
-            required
-          />
+        <Select
+  name="industry_type"
+  value={industryOptions.find(option => option.value === form.industry_type)}  // Correcto: Verifica que el valor se encuentre
+  onChange={handleIndustryChange}
+  options={industryOptions}
+  placeholder="Select or search for industry..."
+  required
+/>
+
 
           {/* Botón para crear un nuevo tipo de industria */}
           <button

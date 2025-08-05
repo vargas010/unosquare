@@ -1,3 +1,4 @@
+import React from 'react';
 import { Routes, Route } from "react-router-dom";
 import AdminLayout from "./layout/AdminLayout";
 import Accounts from './pages/account/Accounts';
@@ -10,28 +11,34 @@ import AccountView from "./pages/account/AccountView";
 import LeadDetail from "./pages/LeadDetail";
 import TypesView from './pages/TypesView';
 import AccountDetailsView from './pages/AccountDetailsView';
-<<<<<<< HEAD
+import LeadsCarousel from './pages/LeadsCarousel';
 import Projects from './pages/Projects';
 import BoardView from './pages/BoardView';
-=======
-import LeadsCarousel from './pages/LeadsCarousel';
+
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
->>>>>>> 13a35e6bf56eb9ba8e48801f87715bf4ee8e2f3b
 
+// Componente para el Dashboard
 const Dashboard = () => (
-  <>
-    <h1 className="text-3xl font-semibold text-gray-800">Dashboard</h1>
-    <p className="text-gray-600 mt-2">Bienvenido a la parte administrativa</p>
-    
-    <LeadsCarousel />
-  </>
+  <div className="flex items-start justify-center min-h-screen bg-gray-100"> 
+    <div className="w-full max-w-7xl mx-auto px-4">
+      {/* Título y descripción centrados */}
+      <div className="text-center mt-20"> 
+        <h1 className="text-3xl font-semibold text-gray-800">Dashboard</h1>
+        <p className="text-gray-600 mt-2">Bienvenido a la parte administrativa</p>
+      </div>
+      {/* Leads a la izquierda */}
+      <div className="mt-10">
+        <LeadsCarousel />
+      </div>
+    </div>
+  </div>
 );
 
 function App() {
   return (
     <AdminLayout>
-      <Routes>
+        <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/leads/view/:id" element={<LeadDetail />} />
         <Route path="/accounts/view/:id" element={<AccountView />} />
