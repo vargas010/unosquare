@@ -11,17 +11,10 @@ import AccountView from "./pages/account/AccountView";
 import LeadDetail from "./pages/LeadDetail";
 import TypesView from './pages/TypesView';
 import AccountDetailsView from './pages/AccountDetailsView';
-<<<<<<< HEAD
 import TaskView from './pages/TaskView';
 import Projects from './pages/Projects';
 import BoardView from './pages/BoardView';
 import LeadsCarousel from './pages/LeadsCarousel';
-=======
-import LeadsCarousel from './pages/LeadsCarousel';
-import Projects from './pages/Projects';
-import BoardView from './pages/BoardView';
-
->>>>>>> 376e46fe6695ccbe44db76af7591fc36688fa7b4
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
