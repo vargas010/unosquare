@@ -4,30 +4,42 @@ import UtcClock from "../components/UtcClock"; // Si deseas mantener el reloj
 
 const Projects = () => {
   const [projects, setProjects] = useState([]);
+  const [accounts, setAccounts] = useState([]); // Para almacenar las cuentas
   const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar el modal
   const [isEditMode, setIsEditMode] = useState(false); // Para saber si estamos editando
   const [editProjectId, setEditProjectId] = useState(null); // Guardar el ID del proyecto a editar
   const [name, setName] = useState('');
   const [status, setStatus] = useState(''); // Estado inicial vacío
-  const [statusOptions] = useState(['solicitando', 'aceptado', 'en_proceso', 'terminado']); // Opciones de estado actualizadas
+  const [accountId, setAccountId] = useState(''); // Para gestionar la cuenta seleccionada
+  const [statusOptions] = useState(['solicitando', 'aceptado', 'en_proceso', 'terminado']); // Opciones de estado actuales
 
-  // Obtener los proyectos cuando el componente se monte
+  // Obtener los proyectos y las cuentas cuando el componente se monte
   useEffect(() => {
-    api.get('/projects') // Aquí 'projects' es la ruta de tu backend
+    api.get('/projects') // Obtener los proyectos
       .then(res => {
         setProjects(res.data.items || []); // Asegúrate de que `items` exista en la respuesta
       })
       .catch(err => {
         console.error('Error al obtener proyectos:', err);
       });
+
+    api.get('/accounts') // Obtener las cuentas
+      .then(res => {
+        setAccounts(res.data.items || []);
+      })
+      .catch(err => {
+        console.error('Error al obtener las cuentas:', err);
+      });
   }, []);
 
   // Función para manejar la creación del proyecto
   const handleCreateProject = (e) => {
     e.preventDefault();
+    console.log("Enviando el proyecto con account_id:", accountId); // Verifica el valor de accountId
     api.post('/projects', {
       name,
       status,
+      account_id: accountId, // Cambiar 'accountId' a 'account_id'
     })
     .then((response) => {
       console.log('Proyecto creado:', response.data);
@@ -42,9 +54,11 @@ const Projects = () => {
   // Función para manejar la edición de un proyecto
   const handleEditProject = (e) => {
     e.preventDefault();
+    console.log("Enviando el proyecto para editar con account_id:", accountId); // Verifica el valor de accountId
     api.put(`/projects/${editProjectId}`, {
       name,
       status,
+      account_id: accountId, // Cambiar 'accountId' a 'account_id'
     })
     .then((response) => {
       const updatedProjects = projects.map((project) =>
@@ -78,6 +92,7 @@ const Projects = () => {
     setEditProjectId(project.id);
     setName(project.name);
     setStatus(project.status);
+    setAccountId(project.account_id); // Establecer la cuenta asociada
     setIsModalOpen(true);
     setIsEditMode(true); // Activar el modo de edición
   };
@@ -178,6 +193,22 @@ const Projects = () => {
                   <option value="">Selecciona un estado</option>
                   {statusOptions.map((option, index) => (
                     <option key={index} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mb-4">
+                <label htmlFor="account" className="block text-sm font-medium text-gray-700">Cuenta Asociada</label>
+                <select
+                  id="account"
+                  value={accountId} // Valor de la cuenta seleccionada
+                  onChange={(e) => setAccountId(e.target.value)} // Actualiza el estado de la cuenta
+                  className="w-full px-4 py-2 border rounded-md"
+                  required
+                >
+                  <option value="">Selecciona una cuenta</option>
+                  {accounts.map((account) => (
+                    <option key={account.id} value={account.id}>{account.name}</option>
                   ))}
                 </select>
               </div>
