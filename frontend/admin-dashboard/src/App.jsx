@@ -18,7 +18,6 @@ import LeadsCarousel from './pages/LeadsCarousel';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
-// Componente para el Dashboard
 const Dashboard = () => (
   <div className="flex items-start justify-center min-h-screen bg-gray-100"> 
     <div className="w-full max-w-7xl mx-auto px-4">

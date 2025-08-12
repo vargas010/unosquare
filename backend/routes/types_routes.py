@@ -16,7 +16,7 @@ def get_types():
             data = response.json()
             all_types.extend(data['items'])
             if len(data['items']) < 200:
-                break  # Si los registros devueltos son menores a 200, significa que no hay más páginas
+                break
             page += 1
 
         return jsonify({'items': all_types})
@@ -37,7 +37,6 @@ def create_type():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 @types_bp.route('/types/<string:type_id>', methods=['GET'])
 def get_type_by_id(type_id):
     try:
@@ -47,23 +46,21 @@ def get_type_by_id(type_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 @types_bp.route('/types/<string:type_id>', methods=['PUT'])
 def update_type(type_id):
     try:
-        data = request.get_json()  # Recibe el JSON con los datos a actualizar
+        data = request.get_json()
         payload = {
             "name": data.get("name"),
             "description": data.get("description")
         }
         response = requests.patch(f"{POCKETBASE_URL}/api/collections/types/records/{type_id}", json=payload)
-        response.raise_for_status()  # Verifica que la solicitud haya sido exitosa
-        return jsonify(response.json())  # Devuelve el resultado
+        response.raise_for_status()
+        return jsonify(response.json())
     except Exception as e:
-        print(f"Error actualizando tipo: {str(e)}")  # Imprime el error en la consola del backend
-        return jsonify({"error": str(e)}), 500  # Devuelve el error con el código 500
+        print(f"Error actualizando tipo: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
-# ✅ Eliminar tipo
 @types_bp.route('/types/<string:type_id>', methods=['DELETE'])
 def delete_type(type_id):
     try:

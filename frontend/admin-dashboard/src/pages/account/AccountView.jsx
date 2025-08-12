@@ -53,53 +53,38 @@ const AccountView = () => {
   }, [currentLeads, currentPageCurrentLeads, showAllRecordsCurrentLeads]);
 
   const fetchRelations = async () => {
-  console.log("🔄 Paso 1: Iniciando fetchRelations...");
-
-  try {
-    const res = await api.get(`/account-leads/all`);
-    console.log("🟢 Paso 2: Relaciones crudas obtenidas:", res.data);
-
-    const relaciones = res.data || [];
-    console.log("🔍 Paso 3: Total relaciones obtenidas:", relaciones.length);
-
-    const relacionesConCuenta = relaciones.filter(
-      (r) => String(r.account_id) === String(id)
-    );
-    console.log("🔗 Paso 4: Relaciones que coinciden con cuenta:", relacionesConCuenta.length);
-
-    const relacionesConExpand = relacionesConCuenta.map((r) => ({
-      ...r,
-      lead: r.expand?.lead_id || null,
-    }));
-
-    const relacionesValidas = relacionesConExpand.filter((r) => r.lead !== null);
-
-    const actuales = relacionesValidas.filter(
-      (r) =>
-        !r.end_date ||
-        r.end_date === "" ||
-        r.end_date === null ||
-        r.end_date === "0001-01-01 00:00:00Z"
-    );
-
-    const anteriores = relacionesValidas.filter(
-      (r) =>
-        r.end_date &&
-        r.end_date !== "" &&
-        r.end_date !== null &&
-        r.end_date !== "0001-01-01 00:00:00Z"
-    );
-
-    setCurrentLeads(actuales);
-    setDisplayedCurrentLeads(actuales);
-    setPreviousLeads(anteriores);
-
-    console.log("✅ Paso 9: Leads asignados al estado. Fin de fetchRelations.");
-  } catch (err) {
-    console.error("❌ Error al cargar relaciones:", err);
-  }
-};
-
+    try {
+      const res = await api.get(`/account-leads/all`);
+      const relaciones = res.data || [];
+      const relacionesConCuenta = relaciones.filter(
+        (r) => String(r.account_id) === String(id)
+      );
+      const relacionesConExpand = relacionesConCuenta.map((r) => ({
+        ...r,
+        lead: r.expand?.lead_id || null,
+      }));
+      const relacionesValidas = relacionesConExpand.filter((r) => r.lead !== null);
+      const actuales = relacionesValidas.filter(
+        (r) =>
+          !r.end_date ||
+          r.end_date === "" ||
+          r.end_date === null ||
+          r.end_date === "0001-01-01 00:00:00Z"
+      );
+      const anteriores = relacionesValidas.filter(
+        (r) =>
+          r.end_date &&
+          r.end_date !== "" &&
+          r.end_date !== null &&
+          r.end_date !== "0001-01-01 00:00:00Z"
+      );
+      setCurrentLeads(actuales);
+      setDisplayedCurrentLeads(actuales);
+      setPreviousLeads(anteriores);
+    } catch (err) {
+      console.error("❌ Error al cargar relaciones:", err);
+    }
+  };
 
   const fetchLeads = () => {
     api.get('/leads')
@@ -141,9 +126,6 @@ const AccountView = () => {
       end_date: null,
       notes: ""
     };
-
-    console.log("📦 Payload a enviar:", payload);
-
     api.post('/account-leads', payload)
       .then(() => {
         fetchRelations();
@@ -156,7 +138,6 @@ const AccountView = () => {
         }
       });
   };
-
 
   const prevPageCurrentLeads = () => {
     if (currentPageCurrentLeads > 1) setCurrentPageCurrentLeads(currentPageCurrentLeads - 1);
@@ -189,23 +170,16 @@ const AccountView = () => {
     try {
       const relation = previousLeads.find(rel => rel.id === relationId);
       if (!relation) return;
-
-      // Quitar fecha de fin (marcar como activo)
       const today = new Date().toISOString().split("T")[0];
       await api.patch(`/account-leads/${relationId}`, { end_date: null });
-
-      // Actualizar estados localmente sin esperar a refetch
       const updatedRelation = { ...relation, end_date: null };
-
       setPreviousLeads((prev) => prev.filter((r) => r.id !== relationId));
       setCurrentLeads((prev) => [...prev, updatedRelation]);
       setDisplayedCurrentLeads((prev) => [...prev, updatedRelation]);
-
     } catch (err) {
       console.error("Error al restaurar el lead:", err);
     }
   };
-
 
   if (!account) return <div className="p-6">Cargando detalles de la cuenta...</div>;
 

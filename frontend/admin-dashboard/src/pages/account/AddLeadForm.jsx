@@ -13,7 +13,6 @@ const AddLeadForm = ({
     setStartDate(today);
   }, []);
 
-  // Filtrar leads ya asignados para ocultarlos
   const availableLeads = leads.filter(
     (lead) => !currentLeads.some((rel) => rel.lead_id === lead.id)
   );
@@ -24,7 +23,6 @@ const AddLeadForm = ({
 
     handleAssignLead({ leadId: selectedLead, startDate });
 
-    // Reiniciar formulario
     setSelectedLead('');
     setStartDate(new Date().toISOString().split("T")[0]);
   };

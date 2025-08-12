@@ -35,7 +35,6 @@ const LeadForm = () => {
           console.error("Error al cargar los datos del lead:", err);
         });
     } else {
-      // Solo cuando se crea
       api.get('/accounts')
         .then(res => setAccounts(res.data.items || []))
         .catch(err => console.error("Error al cargar cuentas:", err));
@@ -53,11 +52,9 @@ const LeadForm = () => {
       if (isEdit) {
         await api.put(`/leads/${id}`, form);
       } else {
-        // Crear el lead
         const res = await api.post('/leads', form);
         const leadId = res.data.id;
 
-        // Crear la relación con la cuenta
         if (selectedAccount) {
           const today = new Date().toISOString().split("T")[0];
           await api.post('/account-leads', {

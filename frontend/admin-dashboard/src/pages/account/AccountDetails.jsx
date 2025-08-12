@@ -1,4 +1,3 @@
-// src/components/account/AccountDetails.jsx
 import React from "react";
 
 const AccountDetails = ({ account }) => {

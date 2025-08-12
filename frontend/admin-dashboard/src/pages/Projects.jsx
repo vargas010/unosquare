@@ -1,127 +1,98 @@
 import React, { useState, useEffect } from 'react';
-import api from '../api/axiosConfig'; // Usamos la configuración de axios
-import UtcClock from "../components/UtcClock"; // Si deseas mantener el reloj
+import api from '../api/axiosConfig';
+import UtcClock from "../components/UtcClock";
 
 const Projects = () => {
   const [projects, setProjects] = useState([]);
-  const [accounts, setAccounts] = useState([]); // Para almacenar las cuentas
-  const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar el modal
-  const [isEditMode, setIsEditMode] = useState(false); // Para saber si estamos editando
-  const [editProjectId, setEditProjectId] = useState(null); // Guardar el ID del proyecto a editar
+  const [accounts, setAccounts] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editProjectId, setEditProjectId] = useState(null);
   const [name, setName] = useState('');
-  const [status, setStatus] = useState(''); // Estado inicial vacío
-  const [accountId, setAccountId] = useState(''); // Para gestionar la cuenta seleccionada
-  const [statusOptions] = useState(['solicitando', 'aceptado', 'en_proceso', 'terminado']); // Opciones de estado actuales
+  const [status, setStatus] = useState('');
+  const [accountId, setAccountId] = useState('');
+  const [statusOptions] = useState(['solicitando', 'aceptado', 'en_proceso', 'terminado']);
 
-  // Obtener los proyectos y las cuentas cuando el componente se monte
   useEffect(() => {
-    api.get('/projects') // Obtener los proyectos
-      .then(res => {
-        setProjects(res.data.items || []); // Asegúrate de que `items` exista en la respuesta
-      })
-      .catch(err => {
-        console.error('Error al obtener proyectos:', err);
-      });
-
-    api.get('/accounts') // Obtener las cuentas
-      .then(res => {
-        setAccounts(res.data.items || []);
-      })
-      .catch(err => {
-        console.error('Error al obtener las cuentas:', err);
-      });
+    const fetchData = async () => {
+      try {
+        const projectsResponse = await api.get('/projects');
+        setProjects(projectsResponse.data.items || []);
+        const accountsResponse = await api.get('/accounts');
+        setAccounts(accountsResponse.data.items || []);
+      } catch (err) {
+        console.error('Error al obtener datos:', err);
+      }
+    };
+    fetchData();
   }, []);
 
-  // Función para manejar la creación del proyecto
-  const handleCreateProject = (e) => {
+  const handleCreateProject = async (e) => {
     e.preventDefault();
-    console.log("Enviando el proyecto con account_id:", accountId); // Verifica el valor de accountId
-    api.post('/projects', {
-      name,
-      status,
-      account_id: accountId, // Cambiar 'accountId' a 'account_id'
-    })
-    .then((response) => {
-      console.log('Proyecto creado:', response.data);
-      setProjects(prevProjects => [...prevProjects, response.data]); // Agregar el nuevo proyecto a la lista
-      setIsModalOpen(false); // Cerrar el modal
-    })
-    .catch((error) => {
+    try {
+      const response = await api.post('/projects', { name, status, account_id: accountId });
+      setProjects(prevProjects => [...prevProjects, response.data]);
+      setIsModalOpen(false);
+    } catch (error) {
       console.error('Error al crear el proyecto:', error.response ? error.response.data : error.message);
-    });
-  };
-
-  // Función para manejar la edición de un proyecto
-  const handleEditProject = (e) => {
-    e.preventDefault();
-    console.log("Enviando el proyecto para editar con account_id:", accountId); // Verifica el valor de accountId
-    api.put(`/projects/${editProjectId}`, {
-      name,
-      status,
-      account_id: accountId, // Cambiar 'accountId' a 'account_id'
-    })
-    .then((response) => {
-      const updatedProjects = projects.map((project) =>
-        project.id === editProjectId ? response.data : project
-      );
-      setProjects(updatedProjects); // Actualizar el proyecto en la lista
-      setIsModalOpen(false); // Cerrar el modal
-      setIsEditMode(false); // Cambiar a modo de creación
-    })
-    .catch((error) => {
-      console.error('Error al editar el proyecto:', error.response ? error.response.data : error.message);
-    });
-  };
-
-  // Función para manejar la eliminación de un proyecto
-  const handleDeleteProject = (projectId) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar este proyecto?')) {
-      api.delete(`/projects/${projectId}`)
-        .then(() => {
-          setProjects(projects.filter(project => project.id !== projectId)); // Eliminar el proyecto de la lista
-          console.log('Proyecto eliminado con éxito');
-        })
-        .catch((error) => {
-          console.error('Error al eliminar el proyecto:', error.response ? error.response.data : error.message);
-        });
     }
   };
 
-  // Función para abrir el formulario de edición con los valores del proyecto
+  const handleEditProject = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await api.put(`/projects/${editProjectId}`, { name, status, account_id: accountId });
+      setProjects(prevProjects => prevProjects.map(project => project.id === editProjectId ? response.data : project));
+      setIsModalOpen(false);
+      setIsEditMode(false);
+    } catch (error) {
+      console.error('Error al editar el proyecto:', error.response ? error.response.data : error.message);
+    }
+  };
+
+  const handleDeleteProject = async (projectId) => {
+    if (window.confirm('¿Estás seguro de que deseas eliminar este proyecto?')) {
+      try {
+        await api.delete(`/projects/${projectId}`);
+        setProjects(prevProjects => prevProjects.filter(project => project.id !== projectId));
+        console.log('Proyecto eliminado con éxito');
+      } catch (error) {
+        console.error('Error al eliminar el proyecto:', error.response ? error.response.data : error.message);
+      }
+    }
+  };
+
   const openEditModal = (project) => {
     setEditProjectId(project.id);
     setName(project.name);
     setStatus(project.status);
-    setAccountId(project.account_id); // Establecer la cuenta asociada
+    setAccountId(project.account_id);
     setIsModalOpen(true);
-    setIsEditMode(true); // Activar el modo de edición
+    setIsEditMode(true);
   };
 
-  // Función para redirigir al espacio de trabajo del proyecto
   const handleViewProject = (projectId) => {
-    window.location.href = `/projects/${projectId}/view`; // Redirigir al espacio de trabajo
+    window.location.href = `/projects/${projectId}/view`;
   };
 
   return (
-    <div className="projects">
-      <h1 className="text-2xl font-bold mb-6 text-center">Lista de Proyectos</h1>
+    <div className="projects container mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Lista de Proyectos</h1>
 
-      <UtcClock /> {/* Si quieres mantener el reloj, puedes dejar esta línea */}
+      <UtcClock />
 
-      {/* Botón para abrir el modal */}
       <div className="mb-6 text-center">
         <button
-          onClick={() => setIsModalOpen(true)} // Abrir el modal para crear proyecto
+          onClick={() => setIsModalOpen(true)}
           className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
         >
           Crear Proyecto
         </button>
       </div>
 
-      {/* Tabla de Proyectos */}
       <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
-        <thead>
-          <tr className="border-b">
+        <thead className="bg-gray-200">
+          <tr>
             <th className="py-2 px-4 text-left">Nombre</th>
             <th className="py-2 px-4 text-left">Estado</th>
             <th className="py-2 px-4 text-left">Acciones</th>
@@ -133,21 +104,21 @@ const Projects = () => {
               <tr key={project.id} className="border-b hover:bg-gray-100">
                 <td className="py-2 px-4">{project.name}</td>
                 <td className="py-2 px-4">{project.status}</td>
-                <td className="py-2 px-4">
+                <td className="py-2 px-4 flex space-x-2">
                   <button
-                    onClick={() => handleViewProject(project.id)} // Ver Proyecto
+                    onClick={() => handleViewProject(project.id)}
                     className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     Ver Proyecto
                   </button>
                   <button
-                    onClick={() => openEditModal(project)} // Abrir modal de edición
+                    onClick={() => openEditModal(project)}
                     className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors"
                   >
                     Editar
                   </button>
                   <button
-                    onClick={() => handleDeleteProject(project.id)} // Llamar a la función de eliminar
+                    onClick={() => handleDeleteProject(project.id)}
                     className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
                   >
                     Eliminar
@@ -163,11 +134,10 @@ const Projects = () => {
         </tbody>
       </table>
 
-      {/* Modal de Crear/Editar Proyecto */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h2 className="text-xl font-bold mb-4">{isEditMode ? 'Editar Proyecto' : 'Crear Proyecto'}</h2>
+            <h2 className="text-xl font-bold mb-4 text-gray-800">{isEditMode ? 'Editar Proyecto' : 'Crear Proyecto'}</h2>
             <form onSubmit={isEditMode ? handleEditProject : handleCreateProject}>
               <div className="mb-4">
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">Nombre del Proyecto</label>
@@ -176,7 +146,7 @@ const Projects = () => {
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-2 border rounded-md"
+                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
@@ -187,7 +157,7 @@ const Projects = () => {
                   id="status"
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  className="w-full px-4 py-2 border rounded-md"
+                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 >
                   <option value="">Selecciona un estado</option>
@@ -201,9 +171,9 @@ const Projects = () => {
                 <label htmlFor="account" className="block text-sm font-medium text-gray-700">Cuenta Asociada</label>
                 <select
                   id="account"
-                  value={accountId} // Valor de la cuenta seleccionada
-                  onChange={(e) => setAccountId(e.target.value)} // Actualiza el estado de la cuenta
-                  className="w-full px-4 py-2 border rounded-md"
+                  value={accountId}
+                  onChange={(e) => setAccountId(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 >
                   <option value="">Selecciona una cuenta</option>
@@ -222,7 +192,7 @@ const Projects = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)} // Cerrar el modal
+                  onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500"
                 >
                   Cancelar

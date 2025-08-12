@@ -20,7 +20,6 @@ const LeadsDetails = () => {
     notes: true,
   });
 
-  // Paginación y orden
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage] = useState(5);
   const [orderBy, setOrderBy] = useState('desc');
@@ -169,11 +168,8 @@ const LeadsDetails = () => {
         <p><strong>Cargo:</strong> {lead.position || '—'}</p>
       </div>
 
-      {/* Cuentas Actuales */}
       <div>
         <h2 className="text-xl font-semibold text-gray-800 mb-2">Cuentas Actuales</h2>
-
-        {/* Campo de búsqueda para Cuentas Actuales */}
         <div className="mb-4">
           <input
             type="text"
@@ -184,10 +180,8 @@ const LeadsDetails = () => {
           />
         </div>
 
-        {/* Fila de botones de orden, paginación y expandir */}
         <div className="flex justify-between items-center mb-4">
           <div className="flex gap-4 items-center">
-            {/* Ordenar */}
             <button
               onClick={handleDateOrder}
               className="flex items-center gap-1 px-3 py-1 text-gray-700 hover:text-blue-600 rounded-md hover:bg-gray-100 bg-blue-100 transition-colors"
@@ -196,16 +190,11 @@ const LeadsDetails = () => {
               {orderBy === 'asc' ? <FaSortAmountDown /> : <FaSortAmountUp />}
               Ordenar
             </button>
-
-            {/* Mostrar */}
             <span className="text-sm text-gray-600">
               Mostrando {showAllRecords ? filteredCurrentRelations.length : paginateData(filteredCurrentRelations, currentPage).length} de {filteredCurrentRelations.length} registros
             </span>
           </div>
-
-          {/* Paginación y Expandir juntos */}
           <div className="flex items-center gap-2">
-            {/* Paginación */}
             {!showAllRecords && (
               <>
                 <button
@@ -229,8 +218,6 @@ const LeadsDetails = () => {
                 </button>
               </>
             )}
-
-            {/* Expandir */}
             <button
               onClick={showAllRecords ? showSome : showAll}
               className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors"
@@ -242,7 +229,6 @@ const LeadsDetails = () => {
           </div>
         </div>
 
-        {/* Tabla de Cuentas Actuales */}
         <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
           <table className="min-w-full text-sm">
             <thead className="bg-blue-100 text-gray-800">
@@ -275,14 +261,10 @@ const LeadsDetails = () => {
             </tbody>
           </table>
         </div>
-
       </div>
 
-      {/* Historial de Cuentas */}
       <div>
         <h2 className="text-xl font-semibold text-gray-800 mb-2">Historial de Cuentas</h2>
-
-        {/* Campo de búsqueda para Historial de Cuentas */}
         <div className="mb-4">
           <input
             type="text"
@@ -293,10 +275,8 @@ const LeadsDetails = () => {
           />
         </div>
 
-        {/* Fila de botones de orden, paginación y expandir */}
         <div className="flex justify-between items-center mb-4">
           <div className="flex gap-4 items-center">
-            {/* Ordenar */}
             <button
               onClick={handleHistoryDateOrder}
               className="flex items-center gap-1 px-3 py-1 text-gray-700 hover:text-blue-600 rounded-md hover:bg-gray-100 bg-blue-100 transition-colors"
@@ -305,16 +285,11 @@ const LeadsDetails = () => {
               {orderBy === 'asc' ? <FaSortAmountDown /> : <FaSortAmountUp />}
               Ordenar
             </button>
-
-            {/* Mostrar */}
             <span className="text-sm text-gray-600">
               Mostrando {showHistoryAllRecords ? filteredPastRelations.length : paginateHistoryData(filteredPastRelations, historyPage).length} de {filteredPastRelations.length} registros
             </span>
           </div>
-
-          {/* Paginación y Expandir juntos */}
           <div className="flex items-center gap-2">
-            {/* Paginación */}
             {!showHistoryAllRecords && (
               <>
                 <button
@@ -338,8 +313,6 @@ const LeadsDetails = () => {
                 </button>
               </>
             )}
-
-            {/* Expandir */}
             <button
               onClick={showHistoryAllRecords ? showHistorySome : showHistoryAll}
               className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors"
@@ -351,7 +324,6 @@ const LeadsDetails = () => {
           </div>
         </div>
 
-        {/* Tabla de Historial de Cuentas */}
         <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
           <table className="min-w-full text-sm">
             <thead className="bg-blue-100 text-gray-800">

@@ -12,7 +12,6 @@ app = Flask(__name__)
 
 CORS(app)
 
-# Registrar el blueprint de leads
 app.register_blueprint(accounts_bp)
 app.register_blueprint(leads_bp)
 app.register_blueprint(account_leads_bp)
@@ -23,7 +22,7 @@ app.register_blueprint(project_tasks_bp)
 
 @app.route('/')
 def home():
-    return 'Bienvenido al backend de Unosquare con Flask y PocketBase'
+    return 'Bienvenido al backend funcionable de Unosquare con Flask y PocketBase'
 
 if __name__ == '__main__':
     app.run(debug=True)

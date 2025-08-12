@@ -29,48 +29,42 @@ const EditTypeModal = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-        // Actualizar tipo de cuenta
-        await api.put(`/types/${typeData.id}`, {
+      await api.put(`/types/${typeData.id}`, {
         name: typeData.name,
         description: typeData.description,
-        });
+      });
 
-        // Actualizar asignación de cuentas
-        const updates = accounts.map(async (acc) => {
+      const updates = accounts.map(async (acc) => {
         const shouldBeAssigned = selectedAccountIds.includes(acc.id);
         const isCurrentlyAssigned = acc.type_id === typeData.id;
 
         if (shouldBeAssigned && !isCurrentlyAssigned) {
-            // Si la cuenta debe ser asignada y no lo está, realiza un PATCH
-            return api.patch(`/accounts/${acc.id}`, {
+          return api.patch(`/accounts/${acc.id}`, {
             type_id: typeData.id,
-            name: acc.name,  // Asegúrate de incluir el nombre
-            website: acc.website,  // Asegúrate de incluir el sitio web
-            phone: acc.phone,  // Asegúrate de incluir el teléfono
-            tax_id: acc.tax_id,  // Asegúrate de incluir el tax_id
-            });
+            name: acc.name,
+            website: acc.website,
+            phone: acc.phone,
+            tax_id: acc.tax_id,
+          });
         } else if (!shouldBeAssigned && isCurrentlyAssigned) {
-            // Si la cuenta no debe estar asignada y está asignada, realiza un PATCH para quitarla
-            return api.patch(`/accounts/${acc.id}`, {
-            type_id: "",  // Limpia el tipo asignado
-            name: acc.name,  // Mantén el nombre
-            website: acc.website,  // Mantén el sitio web
-            phone: acc.phone,  // Mantén el teléfono
-            tax_id: acc.tax_id,  // Mantén el tax_id
-            });
+          return api.patch(`/accounts/${acc.id}`, {
+            type_id: "",
+            name: acc.name,
+            website: acc.website,
+            phone: acc.phone,
+            tax_id: acc.tax_id,
+          });
         }
         return null;
-        });
+      });
 
-        await Promise.all(updates);
-        fetchAccounts(); // Refresca la lista de cuentas
-        onSave();        // Cierra el modal y refresca la vista
+      await Promise.all(updates);
+      fetchAccounts();
+      onSave();
     } catch (err) {
-        console.error("Error al actualizar tipo:", err);
+      console.error("Error al actualizar tipo:", err);
     }
-    };
-
-
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
@@ -136,4 +130,3 @@ const EditTypeModal = ({
 };
 
 export default EditTypeModal;
-

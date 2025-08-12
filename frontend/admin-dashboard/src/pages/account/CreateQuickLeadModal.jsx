@@ -1,4 +1,3 @@
-// src/components/account/CreateQuickLeadModal.jsx
 import React from "react";
 
 const CreateQuickLeadModal = ({

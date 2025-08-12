@@ -1,4 +1,3 @@
-// DroppableColumn.jsx
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 

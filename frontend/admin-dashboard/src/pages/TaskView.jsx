@@ -1,4 +1,3 @@
-// FRONTEND: TaskView.jsx — columnas persistentes + edición de nombre
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../api/axiosConfig';
@@ -16,24 +15,23 @@ import { SortableTask } from './SortableTask';
 const TaskView = () => {
   const { boardId } = useParams();
 
-  const [columns, setColumns] = useState({});         // { [colId]: { name, tasks: [] } }
+  const [columns, setColumns] = useState({});
   const [newColumnName, setNewColumnName] = useState('');
   const [activeTask, setActiveTask] = useState(null);
-
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [newTaskDescription, setNewTaskDescription] = useState('');
-
   const [editingColId, setEditingColId] = useState(null);
   const [editingColName, setEditingColName] = useState('');
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [taskColumnId, setTaskColumnId] = useState(null);
+  const [taskTitle, setTaskTitle] = useState('');
+  const [taskDescription, setTaskDescription] = useState('');
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
-  // Cargar columnas y tareas desde el backend
   useEffect(() => {
     const loadBoardData = async () => {
       setLoading(true);
@@ -44,7 +42,7 @@ const TaskView = () => {
           api.get(`/boards/${boardId}/tasks`)
         ]);
 
-        const boardColumns = colsRes.data || []; // puede ser []
+        const boardColumns = colsRes.data || [];
         const tempColumns = Object.fromEntries(
           boardColumns
             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
@@ -69,7 +67,6 @@ const TaskView = () => {
     loadBoardData();
   }, [boardId]);
 
-  // ---- Drag & Drop de tareas ----
   const handleDragEnd = async (event) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -104,37 +101,38 @@ const TaskView = () => {
     setActiveTask(null);
   };
 
-  // ---- Crear tarea ----
-  const handleCreateTask = async (e) => {
-    e.preventDefault();
+  const openTaskModal = (colId) => {
+    setTaskColumnId(colId);
+    setTaskTitle('');
+    setTaskDescription('');
+    setShowTaskModal(true);
+  };
 
-    if (Object.keys(columns).length === 0) {
-      setError('Crea una columna antes de agregar tareas');
-      return;
-    }
+  const closeTaskModal = () => {
+    setShowTaskModal(false);
+    setTaskColumnId(null);
+  };
 
-    setLoading(true);
-    setError(null);
-
-    const firstColumnId = Object.keys(columns)[0];
-
+  const handleCreateTaskForColumn = async (e) => {
+    e?.preventDefault?.();
+    if (!taskColumnId || !taskTitle.trim()) return;
     try {
+      setLoading(true);
       const res = await api.post('/tasks', {
-        title: newTaskTitle,
-        description: newTaskDescription,
+        title: taskTitle.trim(),
+        description: taskDescription.trim(),
         board_id: boardId,
-        column_id: firstColumnId
+        column_id: taskColumnId
       });
       const newTask = res.data;
       setColumns(prev => ({
         ...prev,
-        [firstColumnId]: {
-          ...prev[firstColumnId],
-          tasks: [...prev[firstColumnId].tasks, newTask]
+        [taskColumnId]: {
+          ...prev[taskColumnId],
+          tasks: [...prev[taskColumnId].tasks, newTask]
         }
       }));
-      setNewTaskTitle('');
-      setNewTaskDescription('');
+      closeTaskModal();
     } catch {
       setError('Error al crear la tarea');
     } finally {
@@ -142,13 +140,12 @@ const TaskView = () => {
     }
   };
 
-  // ---- Crear columna ----
   const handleCreateColumn = async () => {
     if (!newColumnName.trim()) return;
     setError(null);
     try {
       const res = await api.post(`/boards/${boardId}/columns`, { name: newColumnName.trim() });
-      const newCol = res.data; // { id, name, order? }
+      const newCol = res.data;
       setColumns(prev => ({
         ...prev,
         [newCol.id]: { name: newCol.name, tasks: [] },
@@ -159,7 +156,6 @@ const TaskView = () => {
     }
   };
 
-  // ---- Renombrar columna ----
   const startEditColumn = (colId) => {
     setEditingColId(colId);
     setEditingColName(columns[colId]?.name || '');
@@ -188,119 +184,161 @@ const TaskView = () => {
   };
 
   return (
-    <div className="container mx-auto px-6 py-8">
-      <h1 className="text-3xl font-semibold text-center text-gray-800 mb-6">Tareas del Tablero</h1>
-      {error && <p className="text-red-600 text-center mb-4">{error}</p>}
-      {loading && <p className="text-center">Cargando datos...</p>}
+    <div style={{ 
+      backgroundImage: "url('https://placehold.co/1920x1080?text=Task+Manager&font=montserrat')",
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed',
+      minHeight: '100vh'
+    }}>
+      <div className="container mx-auto px-6 py-8 bg-white bg-opacity-90 rounded-lg shadow-lg">
+        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Tareas del Tablero</h1>
 
-      {/* Crear tarea */}
-      <form onSubmit={handleCreateTask} className="mb-6 flex flex-col gap-2 w-1/2 mx-auto">
-        <input
-          type="text"
-          placeholder="Título de la tarea"
-          className="p-2 border rounded"
-          value={newTaskTitle}
-          onChange={(e) => setNewTaskTitle(e.target.value)}
-          required
-        />
-        <textarea
-          placeholder="Descripción"
-          className="p-2 border rounded"
-          value={newTaskDescription}
-          onChange={(e) => setNewTaskDescription(e.target.value)}
-        />
-        <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-          Crear tarea
-        </button>
-      </form>
+        {error && <p className="text-red-600 text-center mb-4">{error}</p>}
+        {loading && <p className="text-center text-gray-600">Cargando datos...</p>}
 
-      {/* Crear columna */}
-      <div className="flex gap-3 mb-6 items-center">
-        <input
-          type="text"
-          placeholder="Nombre de la nueva columna"
-          className="p-2 border rounded"
-          value={newColumnName}
-          onChange={(e) => setNewColumnName(e.target.value)}
-        />
-        <button onClick={handleCreateColumn} className="bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600">
-          Crear columna
-        </button>
+        <div className="flex gap-3 mb-6 items-center">
+          <input
+            type="text"
+            placeholder="Nombre de la nueva columna"
+            className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+            value={newColumnName}
+            onChange={(e) => setNewColumnName(e.target.value)}
+          />
+          <button
+            onClick={handleCreateColumn}
+            className="bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition duration-200"
+          >
+            Crear columna
+          </button>
+        </div>
+
+        {Object.keys(columns).length === 0 ? (
+          <p className="text-center text-gray-500">No hay columnas, crea una para comenzar</p>
+        ) : (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+            onDragStart={e => {
+              const activeId = e.active.id;
+              const task = Object.values(columns).flatMap(c => c.tasks).find(t => t.id === activeId);
+              setActiveTask(task);
+            }}
+          >
+            <div className="flex gap-6 overflow-x-auto">
+              {Object.entries(columns).map(([columnId, column]) => (
+                <div key={columnId} className="bg-white p-4 rounded-lg shadow-md min-w-[320px] border border-gray-200">
+                  <div className="flex items-center justify-between mb-3">
+                    {editingColId === columnId ? (
+                      <input
+                        autoFocus
+                        className="p-2 border border-gray-300 rounded-md w-full mr-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={editingColName}
+                        onChange={(e) => setEditingColName(e.target.value)}
+                      />
+                    ) : (
+                      <h2 className="text-lg font-semibold text-gray-700 truncate">{column.name}</h2>
+                    )}
+
+                    {editingColId === columnId ? (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={saveEditColumn}
+                          className="text-xs bg-blue-600 text-white px-2 py-1 rounded-md hover:bg-blue-700 transition"
+                        >
+                          Guardar
+                        </button>
+                        <button
+                          onClick={cancelEditColumn}
+                          className="text-xs bg-gray-400 text-white px-2 py-1 rounded-md hover:bg-gray-500 transition"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => openTaskModal(columnId)}
+                          className="text-xs bg-indigo-600 text-white px-2 py-1 rounded-md hover:bg-indigo-700 transition"
+                          title="Crear tarea en esta columna"
+                        >
+                          + Nueva tarea
+                        </button>
+                        <button
+                          onClick={() => startEditColumn(columnId)}
+                          className="text-xs bg-gray-700 text-white px-2 py-1 rounded-md hover:bg-gray-800 transition"
+                          title="Editar nombre"
+                        >
+                          Editar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <DroppableColumn id={columnId} tasks={column.tasks}>
+                    {column.tasks.map(task => (
+                      <SortableTask key={task.id} task={task} />
+                    ))}
+                  </DroppableColumn>
+                </div>
+              ))}
+            </div>
+
+            <DragOverlay>
+              {activeTask ? (
+                <div className="p-4 bg-white rounded-lg shadow border w-[260px]">
+                  <h4 className="font-semibold text-gray-800">{activeTask.title}</h4>
+                  <p className="text-sm text-gray-600">{activeTask.description}</p>
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        )}
       </div>
 
-      {/* Listado de columnas */}
-      {Object.keys(columns).length === 0 ? (
-        <p className="text-center text-gray-500">No hay columnas, crea una para comenzar</p>
-      ) : (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-          onDragStart={e => {
-            const activeId = e.active.id;
-            const task = Object.values(columns).flatMap(c => c.tasks).find(t => t.id === activeId);
-            setActiveTask(task);
-          }}
-        >
-          <div className="flex gap-6 overflow-x-auto">
-            {Object.entries(columns).map(([columnId, column]) => (
-              <div key={columnId} className="bg-gray-200 p-4 rounded-lg shadow-md min-w-[300px]">
-                <div className="flex items-center justify-between mb-4">
-                  {editingColId === columnId ? (
-                    <input
-                      autoFocus
-                      className="p-1 border rounded w-full mr-2"
-                      value={editingColName}
-                      onChange={(e) => setEditingColName(e.target.value)}
-                    />
-                  ) : (
-                    <h2 className="text-xl font-semibold text-gray-700">{column.name}</h2>
-                  )}
-
-                  {editingColId === columnId ? (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={saveEditColumn}
-                        className="text-sm bg-blue-600 text-white px-2 py-1 rounded"
-                      >
-                        Guardar
-                      </button>
-                      <button
-                        onClick={cancelEditColumn}
-                        className="text-sm bg-gray-400 text-white px-2 py-1 rounded"
-                      >
-                        Cancelar
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => startEditColumn(columnId)}
-                      className="text-sm bg-gray-700 text-white px-2 py-1 rounded"
-                      title="Editar nombre"
-                    >
-                      Editar
-                    </button>
-                  )}
-                </div>
-
-                <DroppableColumn id={columnId} tasks={column.tasks}>
-                  {column.tasks.map(task => (
-                    <SortableTask key={task.id} task={task} />
-                  ))}
-                </DroppableColumn>
+      {showTaskModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white w-full max-w-sm rounded-lg shadow-xl p-5">
+            <h3 className="text-lg font-semibold mb-3">Nueva tarea</h3>
+            <form onSubmit={handleCreateTaskForColumn} className="space-y-3">
+              <div>
+                <label className="block text-sm mb-1">Título</label>
+                <input
+                  type="text"
+                  value={taskTitle}
+                  onChange={(e) => setTaskTitle(e.target.value)}
+                  className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
               </div>
-            ))}
+              <div>
+                <label className="block text-sm mb-1">Descripción</label>
+                <textarea
+                  value={taskDescription}
+                  onChange={(e) => setTaskDescription(e.target.value)}
+                  className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px]"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={closeTaskModal}
+                  className="px-3 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-3 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Crear
+                </button>
+              </div>
+            </form>
           </div>
-
-          <DragOverlay>
-            {activeTask ? (
-              <div className="p-4 bg-white rounded shadow border w-[260px]">
-                <h4 className="font-semibold text-gray-800">{activeTask.title}</h4>
-                <p className="text-sm text-gray-600">{activeTask.description}</p>
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+        </div>
       )}
     </div>
   );

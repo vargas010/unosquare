@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axiosConfig';
-import { FaPlus, FaEye, FaRegEdit, FaTrashAlt, FaChevronLeft, FaChevronRight, FaSortAmountUp, FaSortAmountDown, FaChevronUp, FaChevronDown } from 'react-icons/fa'; 
+import { FaPlus, FaEye, FaRegEdit, FaTrashAlt, FaChevronLeft, FaChevronRight, FaSortAmountUp, FaSortAmountDown, FaChevronUp, FaChevronDown } from 'react-icons/fa';
 import UtcClock from "../components/UtcClock";
 
 const handleDelete = (leadId) => {
@@ -9,7 +9,6 @@ const handleDelete = (leadId) => {
   if (confirmDelete) {
     api.delete(`/leads/${leadId}`)
       .then(res => {
-        // Actualizamos el estado después de eliminar el lead
         setLeads((prevLeads) => prevLeads.filter(lead => lead.id !== leadId));
         console.log("Lead eliminado correctamente");
       })
@@ -22,7 +21,7 @@ const handleDelete = (leadId) => {
 const Leads = () => {
   const [leads, setLeads] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [orderBy, setOrderBy] = useState('desc'); // Orden descendente por defecto
+  const [orderBy, setOrderBy] = useState('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage] = useState(5);
   const [showAllRecords, setShowAllRecords] = useState(false);
@@ -42,24 +41,23 @@ const Leads = () => {
     fetchLeads();
   }, []);
 
-  // Cambiamos la lógica de ordenación
-const sortedLeads = useMemo(() => {
-  const sorted = [...leads].sort((a, b) => {
-    const nameA = a.name.toLowerCase();
-    const nameB = b.name.toLowerCase();
-    return orderBy === 'asc'
-      ? nameA.localeCompare(nameB)
-      : nameB.localeCompare(nameA);
-  });
+  const sortedLeads = useMemo(() => {
+    const sorted = [...leads].sort((a, b) => {
+      const nameA = a.name.toLowerCase();
+      const nameB = b.name.toLowerCase();
+      return orderBy === 'asc'
+        ? nameA.localeCompare(nameB)
+        : nameB.localeCompare(nameA);
+    });
 
-  return sorted.filter(lead =>
-    lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.personal_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.work_email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-}, [leads, searchTerm, orderBy]);
+    return sorted.filter(lead =>
+      lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.personal_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.work_email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [leads, searchTerm, orderBy]);
 
   const totalPages = Math.ceil(sortedLeads.length / rowsPerPage);
   const displayedLeads = showAllRecords
@@ -80,17 +78,16 @@ const sortedLeads = useMemo(() => {
 
   const showAll = () => {
     setShowAllRecords(true);
-    setCurrentPage(1); // Reiniciamos la página a 1
+    setCurrentPage(1);
   };
 
   const showSome = () => {
     setShowAllRecords(false);
-    setCurrentPage(1); // Reiniciamos la página a 1
+    setCurrentPage(1);
   };
 
-  // Cambiamos el estado de 'orderBy' cuando el botón es clickeado
   const handleOrderChange = () => {
-    setOrderBy(prevOrder => (prevOrder === 'asc' ? 'desc' : 'asc')); // Cambiar el orden entre ascendente y descendente
+    setOrderBy(prevOrder => (prevOrder === 'asc' ? 'desc' : 'asc'));
   };
 
   if (!leads) return <div className="p-6">Cargando leads...</div>;
@@ -110,10 +107,8 @@ const sortedLeads = useMemo(() => {
 
       <UtcClock />
 
-      {/* Fila de Búsqueda y Ordenación */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex gap-2 w-full max-w-xs">
-          {/* Búsqueda de Leads */}
           <input
             type="text"
             placeholder="Buscar leads..."
@@ -123,9 +118,7 @@ const sortedLeads = useMemo(() => {
           />
         </div>
         
-        {/* Fila de Paginación y Expandir */}
         <div className="flex items-center gap-4">
-          {/* Paginación */}
           {!showAllRecords && (
             <div className="flex items-center gap-2">
               <button
@@ -150,7 +143,6 @@ const sortedLeads = useMemo(() => {
             </div>
           )}
 
-          {/* Expandir o Contraer */}
           <button
             onClick={showAllRecords ? showSome : showAll}
             className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors"
@@ -162,10 +154,8 @@ const sortedLeads = useMemo(() => {
         </div>
       </div>
 
-      {/* Fila de Ordenar y Mostrar */}
       <div className="flex justify-between items-center mb-4">
         <div className="flex gap-4 items-center">
-          {/* Ordenar */}
           <button
             onClick={handleOrderChange}
             className="flex items-center gap-1 px-3 py-1 text-gray-700 hover:text-blue-600 rounded-md hover:bg-gray-100 bg-blue-100 transition-colors"
@@ -175,7 +165,6 @@ const sortedLeads = useMemo(() => {
             Ordenar
           </button>
 
-          {/* Mostrar */}
           <span className="text-sm text-gray-600">
             Mostrando {displayedLeads.length} de {sortedLeads.length}
           </span>

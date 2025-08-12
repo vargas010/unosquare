@@ -13,7 +13,7 @@ const CurrentLeadsTable = ({
   currentLeads,
   searchTerm,
   setSearchTerm,
-  handleSortCurrentLeads,  // Si esto es pasado como prop, lo dejamos tal cual
+  handleSortCurrentLeads,
   prevPageCurrentLeads,
   nextPageCurrentLeads,
   toggleShowAllCurrentLeads,
@@ -52,7 +52,6 @@ const CurrentLeadsTable = ({
     }
   };
 
-  // Renombramos la función interna de 'handleSortCurrentLeads' a 'sortLeads'
   const sortLeads = () => {
     setSortOrder(sortOrder === "desc" ? "asc" : "desc");
   };

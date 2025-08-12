@@ -6,7 +6,6 @@ project_boards_bp = Blueprint('project_boards', __name__)
 
 BASE_URL = "http://127.0.0.1:8090/api/collections/project_boards/records"
 
-# Crear un nuevo board
 @project_boards_bp.route('/boards', methods=['POST'])
 def create_board():
     try:
@@ -39,7 +38,6 @@ def get_boards_for_project(project_id):
         return jsonify({"error": str(e)}), 500
 
 
-# Actualizar un board
 @project_boards_bp.route('/boards/<string:board_id>', methods=['PUT'])
 def update_board(board_id):
     try:
@@ -57,7 +55,6 @@ def update_board(board_id):
         return jsonify({"error": str(e)}), 500
 
 
-# Eliminar un board
 @project_boards_bp.route('/boards/<string:board_id>', methods=['DELETE'])
 def delete_board(board_id):
     try:
@@ -73,7 +70,6 @@ def delete_board(board_id):
 # NUEVOS ENDPOINTS DE COLUMNAS
 # =========================
 
-# Obtener columnas de un board
 @project_boards_bp.route('/boards/<string:board_id>/columns', methods=['GET'])
 def get_board_columns(board_id):
     try:
@@ -85,7 +81,6 @@ def get_board_columns(board_id):
         return jsonify({"error": str(e)}), 500
 
 
-# Agregar columna a un board
 @project_boards_bp.route('/boards/<string:board_id>/columns', methods=['POST'])
 def add_board_column(board_id):
     try:
@@ -105,7 +100,6 @@ def add_board_column(board_id):
         cols = board.get('columns') or []
         cols.append(new_col)
 
-        # Guardar en PocketBase
         pr = requests.patch(f"{BASE_URL}/{board_id}", json={"columns": cols})
         pr.raise_for_status()
 
@@ -113,7 +107,6 @@ def add_board_column(board_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Renombrar (y opcionalmente reordenar) una columna del board
 @project_boards_bp.route('/boards/<string:board_id>/columns/<string:col_id>', methods=['PUT'])
 def update_board_column(board_id, col_id):
     try:
@@ -121,13 +114,11 @@ def update_board_column(board_id, col_id):
         new_name = data.get("name")
         new_order = data.get("order")  # opcional
 
-        # 1) Traer el board
         r = requests.get(f"{BASE_URL}/{board_id}")
         r.raise_for_status()
         board = r.json()
         cols = board.get('columns') or []
 
-        # 2) Actualizar la columna que coincide por id
         found = False
         updated_cols = []
         for c in cols:
@@ -145,7 +136,6 @@ def update_board_column(board_id, col_id):
         if not found:
             return jsonify({"error": "Columna no encontrada"}), 404
 
-        # 3) Guardar cambios
         pr = requests.patch(f"{BASE_URL}/{board_id}", json={"columns": updated_cols})
         pr.raise_for_status()
 
@@ -153,20 +143,17 @@ def update_board_column(board_id, col_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Reordenar columnas del board (por ids)
 @project_boards_bp.route('/boards/<string:board_id>/columns/reorder', methods=['PUT'])
 def reorder_board_columns(board_id):
     try:
         data = request.get_json()
         order_ids = data.get("order", [])  # ["col_a", "col_b", "col_c"]
 
-        # 1) Leer board actual
         r = requests.get(f"{BASE_URL}/{board_id}")
         r.raise_for_status()
         board = r.json()
         cols = board.get('columns') or []
 
-        # 2) Reindexar 'order' según order_ids
         id_to_col = {c['id']: c for c in cols}
         new_cols = []
         for idx, col_id in enumerate(order_ids, start=1):
@@ -175,7 +162,6 @@ def reorder_board_columns(board_id):
                 col = {**col, "order": idx}
                 new_cols.append(col)
 
-        # Añadir cualquier columna que no viniera en order (seguridad)
         remaining = [c for cid, c in id_to_col.items() if cid not in set(order_ids)]
         next_idx = len(new_cols) + 1
         for c in remaining:
@@ -183,7 +169,6 @@ def reorder_board_columns(board_id):
             new_cols.append(c)
             next_idx += 1
 
-        # 3) Guardar
         pr = requests.patch(f"{BASE_URL}/{board_id}", json={"columns": new_cols})
         pr.raise_for_status()
 

@@ -1,11 +1,9 @@
-# BACKEND: project_tasks_routes.py
 from flask import Blueprint, jsonify, request
 import requests
 
 project_tasks_bp = Blueprint('project_tasks', __name__)
 BASE_URL = "http://127.0.0.1:8090/api/collections/project_tasks/records"
 
-# Crear una nueva tarea
 @project_tasks_bp.route('/tasks', methods=['POST'])
 def create_task():
     try:
@@ -23,7 +21,6 @@ def create_task():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Obtener las tareas para un tablero específico
 @project_tasks_bp.route('/boards/<string:board_id>/tasks', methods=['GET'])
 def get_tasks_for_board(board_id):
     try:
@@ -34,7 +31,6 @@ def get_tasks_for_board(board_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Actualizar una tarea
 @project_tasks_bp.route('/tasks/<string:task_id>', methods=['PUT'])
 def update_task(task_id):
     try:
@@ -51,7 +47,6 @@ def update_task(task_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Eliminar una tarea
 @project_tasks_bp.route('/tasks/<string:task_id>', methods=['DELETE'])
 def delete_task(task_id):
     try:

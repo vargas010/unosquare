@@ -22,7 +22,7 @@ const LeadsCarousel = () => {
       try {
         const res = await fetch('http://localhost:5000/account-leads/recent');
         const data = await res.json();
-        console.log("✅ Leads recibidos:", data);
+        console.log("Leads recibidos:", data);
         setLeads(data);
       } catch (err) {
         console.error('Error cargando leads recientes:', err);

@@ -20,17 +20,14 @@ const PreviousLeadsTable = ({
   handleRestoreLead,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1); // Página actual
+  const [currentPage, setCurrentPage] = useState(1);
   const leadsPerPage = 5;
 
-  // Ordena los leads con base en la fecha
   const sortedLeads = useMemo(() => {
     const sorted = [...previousLeads].sort((a, b) => {
       const dateA = new Date(a.start_date);
       const dateB = new Date(b.start_date);
-
-      if (isNaN(dateA) || isNaN(dateB)) return 0; // Si alguna de las fechas no es válida, no las ordenes
-
+      if (isNaN(dateA) || isNaN(dateB)) return 0;
       return orderByPreviousLeads === "asc" ? dateA - dateB : dateB - dateA;
     });
 
@@ -42,20 +39,17 @@ const PreviousLeadsTable = ({
     });
   }, [previousLeads, orderByPreviousLeads, searchTerm, leads]);
 
-  // Lógica de paginación: Calcula los registros que se deben mostrar
   const startIndex = (currentPage - 1) * leadsPerPage;
   const displayedLeads = showAllRecordsPreviousLeads
     ? sortedLeads
     : sortedLeads.slice(startIndex, startIndex + leadsPerPage);
 
-  // Manejo de la siguiente página
   const nextPage = () => {
     if (currentPage < Math.ceil(previousLeads.length / leadsPerPage)) {
       setCurrentPage(currentPage + 1);
     }
   };
 
-  // Manejo de la página anterior
   const prevPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
@@ -65,12 +59,9 @@ const PreviousLeadsTable = ({
   return (
     <div className="bg-white shadow rounded-lg p-6 mt-6">
       <div className="flex justify-between items-center mb-4">
-        {/* Título a la izquierda */}
         <h2 className="text-xl font-semibold text-gray-800">
           Historial de Leads en esta Cuenta
         </h2>
-
-        {/* Buscar a la derecha */}
         <div className="flex items-center">
           <input
             type="text"
@@ -83,7 +74,6 @@ const PreviousLeadsTable = ({
       </div>
 
       <div className="flex justify-between items-center mb-4">
-        {/* Ordenar y Mostrar a la izquierda */}
         <div className="flex items-center gap-3">
           <button
             onClick={() =>
@@ -95,14 +85,11 @@ const PreviousLeadsTable = ({
             {orderByPreviousLeads === "asc" ? <FaSortAmountDown /> : <FaSortAmountUp />}
             <span className="text-sm">Ordenar</span>
           </button>
-
-          {/* Mostrar número de leads */}
           <span className="text-sm text-gray-600">
             Mostrando {displayedLeads.length} de {sortedLeads.length}
           </span>
         </div>
 
-        {/* Paginación y Expandir a la derecha */}
         <div className="flex items-center gap-3">
           {!showAllRecordsPreviousLeads && previousLeads.length > leadsPerPage && (
             <div className="flex items-center gap-1 bg-blue-100 px-3 py-1 rounded-md">
@@ -114,11 +101,9 @@ const PreviousLeadsTable = ({
               >
                 <FaChevronLeft />
               </button>
-
               <span className="text-sm">
                 {currentPage}/{Math.ceil(previousLeads.length / leadsPerPage)}
               </span>
-
               <button
                 onClick={nextPage}
                 disabled={currentPage === Math.ceil(previousLeads.length / leadsPerPage)}
@@ -129,8 +114,6 @@ const PreviousLeadsTable = ({
               </button>
             </div>
           )}
-
-          {/* Botón de "Mostrar Todo" */}
           <button
             onClick={toggleShowAllPreviousLeads}
             className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors"
@@ -148,7 +131,6 @@ const PreviousLeadsTable = ({
         </div>
       </div>
 
-      {/* Tabla de historial de leads */}
       {previousLeads.length > 0 ? (
         <table className="min-w-full table-auto">
           <thead className="bg-blue-100 text-gray-800">

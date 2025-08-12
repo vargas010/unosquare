@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/axiosConfig';
-import Select from 'react-select'; // Importamos react-select
+import Select from 'react-select';
 
 const AccountForm = () => {
   const { id } = useParams();
@@ -14,37 +14,34 @@ const AccountForm = () => {
     address: '',
     phone: '',
     tax_id: '',
-    industry_type: '' // Nuevo campo para el tipo de industria
+    industry_type: ''
   });
 
-  const [industries, setIndustries] = useState([]); // Estado para almacenar los tipos de industria
-  const [newIndustryName, setNewIndustryName] = useState(''); // Estado para el nuevo tipo de industria
-  const [showModal, setShowModal] = useState(false); // Estado para mostrar el modal
+  const [industries, setIndustries] = useState([]);
+  const [newIndustryName, setNewIndustryName] = useState('');
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    // Cargar los tipos de industria
     api.get('/types')
       .then(res => {
-        setIndustries(res.data.items || []); // Establecer los tipos de industria
+        setIndustries(res.data.items || []);
       })
       .catch(err => {
         console.error("Error al cargar los tipos de industria:", err);
       });
 
-    // Si es un formulario de edición, cargar los datos
     if (isEdit) {
       api.get(`/accounts/${id}`)
         .then(res => {
           const data = res.data;
-setForm({
-  name: data.name || '',
-  website: data.website || '',
-  address: data.address || '',
-  phone: data.phone || '',
-  tax_id: data.tax_id || '',
-  industry_type: data.industry_type || ''  // Verifica que este campo sea correcto
-});
-
+          setForm({
+            name: data.name || '',
+            website: data.website || '',
+            address: data.address || '',
+            phone: data.phone || '',
+            tax_id: data.tax_id || '',
+            industry_type: data.industry_type || ''
+          });
         })
         .catch(err => {
           console.error("Error al cargar los datos de la cuenta:", err);
@@ -58,10 +55,10 @@ setForm({
 
   const handleSubmit = e => {
     e.preventDefault();
-const requestData = { 
-  ...form, 
-  industry_type: form.industry_type || '' // Asegúrate de enviar el tipo de industria
-};
+    const requestData = { 
+      ...form, 
+      industry_type: form.industry_type || ''
+    };
 
     const request = isEdit ? api.put(`/accounts/${id}`, requestData) : api.post('/accounts', requestData);
 
@@ -74,16 +71,14 @@ const requestData = {
       });
   };
 
-  // Función para crear un nuevo tipo de industria
   const handleCreateIndustry = () => {
     api.post('/types', { name: newIndustryName })
       .then(() => {
-        // Recargar los tipos de industria
         api.get('/types')
           .then(res => {
-            setIndustries(res.data.items || []); // Actualiza la lista de tipos de industria
-            setShowModal(false); // Cerrar el modal
-            setNewIndustryName(''); // Limpiar el input
+            setIndustries(res.data.items || []);
+            setShowModal(false);
+            setNewIndustryName('');
           })
           .catch(err => {
             console.error("Error al cargar los tipos de industria:", err);
@@ -94,7 +89,6 @@ const requestData = {
       });
   };
 
-  // Formatear las opciones para react-select
   const industryOptions = industries.map((industry) => ({
     value: industry.id,
     label: industry.name
@@ -122,20 +116,17 @@ const requestData = {
           <input type="text" name="tax_id" value={form.tax_id} onChange={handleChange} placeholder="NIT" className="p-2 border rounded" />
         </div>
 
-        {/* Campo para seleccionar el tipo de industria */}
         <div className="grid grid-cols-2 gap-4">
           <label className="p-2">Type Account</label>
-        <Select
-  name="industry_type"
-  value={industryOptions.find(option => option.value === form.industry_type)}  // Correcto: Verifica que el valor se encuentre
-  onChange={handleIndustryChange}
-  options={industryOptions}
-  placeholder="Select or search for industry..."
-  required
-/>
+          <Select
+            name="industry_type"
+            value={industryOptions.find(option => option.value === form.industry_type)}
+            onChange={handleIndustryChange}
+            options={industryOptions}
+            placeholder="Select or search for industry..."
+            required
+          />
 
-
-          {/* Botón para crear un nuevo tipo de industria */}
           <button
             type="button"
             onClick={() => setShowModal(true)}
@@ -155,7 +146,6 @@ const requestData = {
         </div>
       </form>
 
-      {/* Modal para crear nuevo tipo de industria */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white w-full max-w-md p-6 rounded-lg shadow-lg">

@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import api from '../api/axiosConfig';
 import EditTypeModal from "./EditTypeModal";
 import { FaPlus, FaEye, FaRegEdit, FaTrashAlt, FaChevronLeft, FaChevronRight, FaChevronUp, FaChevronDown, FaSortAmountUp, FaSortAmountDown } from 'react-icons/fa'; 
-import UtcClock from "../components/UtcClock"; // Para la hora
-import { useNavigate } from 'react-router-dom'; // Importamos useNavigate para la navegación
+import UtcClock from "../components/UtcClock";
+import { useNavigate } from 'react-router-dom';
 
 const TypesView = () => {
   const [types, setTypes] = useState([]);
@@ -17,7 +17,7 @@ const TypesView = () => {
   const [perPage, setPerPage] = useState(10); 
   const [showAll, setShowAll] = useState(false); 
   const [sortOrder, setSortOrder] = useState("asc"); 
-  const navigate = useNavigate(); // Función para la navegación
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchTypes();
@@ -79,7 +79,7 @@ const TypesView = () => {
   };
 
   const handleViewData = (typeId) => {
-    navigate(`/accounts/${typeId}`); // Redirige a la nueva vista con el typeId
+    navigate(`/accounts/${typeId}`);
   };
 
   const handleSortOrder = () => {
@@ -107,7 +107,7 @@ const TypesView = () => {
 
   const toggleShowAll = () => {
     setShowAll(prev => !prev);
-    setPage(1); // Reinicia la página a 1 cuando se expande
+    setPage(1);
   };
 
   return (
@@ -138,7 +138,6 @@ const TypesView = () => {
       </div>
 
       <div className="flex justify-between items-center mb-4">
-        {/* Ordenar y Mostrando juntos */}
         <div className="flex items-center gap-4">
           <button
             onClick={handleSortOrder}
@@ -154,7 +153,6 @@ const TypesView = () => {
           </span>
         </div>
 
-        {/* Paginación y Expandir juntos */}
         <div className="flex items-center gap-4">
           {!showAll && totalPages > 1 && (
             <div className="flex items-center gap-1 bg-blue-100 px-3 py-1 rounded-md">
